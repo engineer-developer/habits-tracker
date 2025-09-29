@@ -1,5 +1,5 @@
+from pydantic import Field, PostgresDsn
 from pydantic_settings import BaseSettings
-from pydantic import PostgresDsn, Field
 
 
 class Settings(BaseSettings):
