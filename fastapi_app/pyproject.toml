@@ -1,0 +1,32 @@
+[project]
+name = "fastapi-backend-service"
+version = "0.1.0"
+description = "Fatsapi backend service for handle requests from telegram bot and for interacting with the database"
+authors = [
+    {name = "Alex Suslov",email = "suslov.lexx@gmail.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi (>=0.117.1,<0.118.0)",
+    "sqlalchemy (>=2.0.43,<3.0.0)",
+    "psycopg[binary] (>=3.2.10,<4.0.0)",
+    "pydantic-settings (>=2.11.0,<3.0.0)",
+    "alembic (>=1.16.5,<2.0.0)",
+    "uvicorn (>=0.37.0,<0.38.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.13.2"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+select = ["E", "F", "ANN", "FAST"]
+ignore = []
