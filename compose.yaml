@@ -1,0 +1,35 @@
+name: habits-tracker
+
+services:
+
+  db:
+    image: postgres:17.0
+    environment:
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_PORT: ${DB_INTERNAL_PORT}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    ports:
+      - "${DB_EXTERNAL_PORT}:5432"
+    restart: always
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  fastapi_app:
+    build:
+      context: fastapi_app/.
+    environment:
+      DB_URL: "postgres"
+    ports:
+      - "${FASTAPI_PORT}:8000"
+    command: >
+      uvicorn loader:app --host 0.0.0.0 --port 8000
+
+volumes:
+  pg_data:
+
+networks:
+  app_network:
