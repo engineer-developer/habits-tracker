@@ -14,12 +14,12 @@ RUN pip install pipx
 
 ENV PATH="/root/.local/bin:${PATH}"
 
-RUN pipx install poetry
-
-RUN poetry config virtualenvs.create false --local
+RUN pipx install poetry && poetry config virtualenvs.create false
 
 COPY pyproject.toml ./
 
-RUN poetry install
+RUN poetry install --only main
 
-COPY src/ ./
+ENV PYTHONPATH=./src/fastapi_app/
+
+COPY src/ ./src/
