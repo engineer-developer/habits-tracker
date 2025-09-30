@@ -22,7 +22,7 @@ services:
     build:
       context: fastapi_app/.
     environment:
-      DB_URL: "postgres"
+      DB_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_INTERNAL_PORT}/${DB_NAME}"
     ports:
       - "${FASTAPI_PORT}:8000"
     command: >
