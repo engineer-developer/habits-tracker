@@ -3,9 +3,8 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from fastapi import FastAPI
-
-from config import Settings
+from config import Settings, get_settings
+from fastapi import Depends, FastAPI
 
 
 @asynccontextmanager
@@ -14,11 +13,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Настройка параметров приложения.
 
     :param app: Экземпляр класса Fastapi.
-    :return: Асинхронный генератор.
+    :return: Асинхронный итератор.
     """
-    settings = Settings()
-    app.state.settings = settings
-
     yield
 
 
@@ -26,11 +22,11 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/", name="Get some", description="Get some info")
-async def get_some() -> dict:
+async def get_some(settings: Settings = Depends(get_settings)) -> dict:
     """
     Тестовая ручка.
 
     :return: db_url
     """
-    db_url = app.state.settings.db_url
-    return {"DB_URL": db_url}
+    db_url = settings.db_url
+    return {"DB_URL": db_url, "message": "HI Nick"}
