@@ -27,6 +27,15 @@ services:
       - "${FASTAPI_PORT}:8000"
     command: >
       uvicorn src.fastapi_app.loader:app --host 0.0.0.0 --port 8000 --reload
+    develop:
+      watch:
+        - action: rebuild
+          path: ./fastapi_app/pyproject.toml
+          target: /app/pyproject.toml
+        - action: sync
+          path: ./fastapi_app/src/
+          target: /app/src/
+    restart: unless-stopped
 
 volumes:
   pg_data:
