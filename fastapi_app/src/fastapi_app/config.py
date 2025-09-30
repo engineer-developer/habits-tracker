@@ -8,3 +8,13 @@ class Settings(BaseSettings):
     """Настройки сервиса."""
 
     db_url: PostgresDsn = Field(validation_alias="DB_URL")
+
+
+def get_settings() -> Settings:
+    """
+    Функция получения экземпляра класса Settings.
+
+    :return: Экземпляр настроек.
+    """
+    settings = Settings()
+    return settings
