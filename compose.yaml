@@ -11,12 +11,12 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
     ports:
-      - "${DB_EXTERNAL_PORT}:5432"
+      - "${DB_EXTERNAL_PORT}:${DB_INTERNAL_PORT}"
     restart: always
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
-      - app_network
+      - backend
 
   fastapi_app:
     build:
@@ -39,10 +39,10 @@ services:
           target: /app/src/
     restart: unless-stopped
     networks:
-      - app_network
+      - backend
 
 volumes:
   pg_data:
 
 networks:
-  app_network:
+  backend:
