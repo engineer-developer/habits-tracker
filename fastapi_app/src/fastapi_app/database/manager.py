@@ -23,17 +23,7 @@ settings = get_settings()
 async_engine: AsyncEngine = create_async_engine(url=settings.db_url.unicode_string())
 async_engine.execution_options(isolation_level="SERIALIZABLE")
 
-    :param settings: Настройки приложения.
-    :type settings: CommonSettings
-    :return: Асинхронный движок.
-    :rtype: AsyncEngine
-    """
-    a_engine = create_async_engine(url=settings.db_url.unicode_string())
-    a_engine.execution_options(isolation_level="SERIALIZABLE")
-    return a_engine
-
-
-async_engine = Depends(get_async_engine)
+# Создаем фабрику асинхронных сессий
 AsyncSessionMaker = async_sessionmaker(
     bind=async_engine,
     expire_on_commit=False,
