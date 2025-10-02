@@ -13,8 +13,7 @@ from fastapi import FastAPI
 async def lifespan(
     app: FastAPI,
 ) -> AsyncIterator[None]:
-    """
-    Настройка параметров приложения.
+    """Настройка параметров приложения.
 
     :param app: Экземпляр класса Fastapi.
     :return: Асинхронный итератор.
@@ -30,8 +29,7 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/", name="Get some", description="Get some info")
 async def get_some(settings: CommonSettings) -> dict:
-    """
-    Тестовая ручка.
+    """Тестовая ручка.
 
     :return: db_url
     """

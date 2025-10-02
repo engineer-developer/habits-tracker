@@ -1,5 +1,4 @@
-"""
-Менеджер базы данных.
+"""Менеджер базы данных.
 
 async_engine - асинхронный движок
 AsyncSessionMaker - класс для создания асинхронных сессий
@@ -33,8 +32,7 @@ AsyncSessionMaker = async_sessionmaker(
 
 
 async def get_async_session() -> AsyncIterator[AsyncSession]:
-    """
-    Получаем асинхронную сессию.
+    """Получаем асинхронную сессию.
 
     :return: Асинхронная сессия.
     :rtype: AsyncSession
@@ -44,8 +42,7 @@ async def get_async_session() -> AsyncIterator[AsyncSession]:
 
 
 async def get_engine_connection() -> AsyncIterator[AsyncConnection]:
-    """
-    Получаем асинхронное подключение.
+    """Получаем асинхронное подключение.
 
     :return: Асинхронное подключение.
     :rtype: AsyncConnection

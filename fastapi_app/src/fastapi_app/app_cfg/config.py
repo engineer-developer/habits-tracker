@@ -14,8 +14,7 @@ class Settings(BaseSettings):
 
 
 def get_settings() -> Settings:
-    """
-    Функция получения экземпляра класса Settings.
+    """Функция получения экземпляра класса Settings.
 
     :return: Экземпляр настроек.
     """
