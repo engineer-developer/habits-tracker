@@ -1,5 +1,8 @@
 """Модуль получения настроек из переменных окружения."""
 
+from typing import Annotated
+
+from fastapi import Depends
 from pydantic import Field, PostgresDsn
 from pydantic_settings import BaseSettings
 
@@ -18,3 +21,7 @@ def get_settings() -> Settings:
     """
     settings = Settings()
     return settings
+
+
+# Аннотация для получения экземпляра настроек
+CommonSettings = Annotated[Settings, Depends(get_settings)]
