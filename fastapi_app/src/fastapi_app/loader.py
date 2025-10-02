@@ -3,18 +3,26 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from config import Settings, get_settings
-from fastapi import Depends, FastAPI
+from alembic_utils import upgrade_to_head
+from app_cfg.config import CommonSettings
+from fastapi import FastAPI
+from asyncio import get_running_loop
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(
+    app: FastAPI,
+) -> AsyncIterator[None]:
     """
     Настройка параметров приложения.
 
     :param app: Экземпляр класса Fastapi.
     :return: Асинхронный итератор.
     """
+
+    # Применение миграций alembic
+    loop = get_running_loop()
+    loop.run_in_executor(None, upgrade_to_head)
     yield
 
 
@@ -22,7 +30,7 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/", name="Get some", description="Get some info")
-async def get_some(settings: Settings = Depends(get_settings)) -> dict:
+async def get_some(settings: CommonSettings) -> dict:
     """
     Тестовая ручка.
 
