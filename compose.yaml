@@ -25,6 +25,8 @@ services:
       DB_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_INTERNAL_PORT}/${DB_NAME}"
     ports:
       - "${FASTAPI_PORT}:8000"
+    depends_on:
+      - postgres
     command: >
       uvicorn src.fastapi_app.loader:app --host 0.0.0.0 --port 8000 --reload
     develop:
