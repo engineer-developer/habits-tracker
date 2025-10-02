@@ -5,7 +5,7 @@ naming_convention - Шаблон соглашения об именовании.
 metadata - Метаданные.
 custom_registry - Обобщенный реестр для сопоставления классов.
 Model - Базовая модель.
-TimeStampMixin - Миксин для дополнения модели временем создания и обновления.
+TimestampMixin - Миксин для дополнения модели временем создания и обновления.
 """
 
 from datetime import UTC, datetime
@@ -36,7 +36,7 @@ class Model(AsyncAttrs, DeclarativeBase):
     id: Mapped[int] = mapped_column(primary_key=True)
 
 
-class TimeStampMixin:
+class TimestampMixin:
     """Миксин для дополнения модели временем создания и обновления."""
 
     created_at: Mapped[datetime] = mapped_column(
