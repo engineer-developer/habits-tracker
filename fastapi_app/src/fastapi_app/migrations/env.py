@@ -7,19 +7,22 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# Импорт модели и конфига
+# Импорт моделей
 import os
 import sys
 
 # Добавляем корень проекта в PYTHONPATH
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import get_settings
 from dao.base_model import Model
 from dao.models import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Устанавливаем db_url из переменной окружения DB_URL
+db_url = os.getenv("DB_URL")
+config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -36,11 +39,6 @@ target_metadata = Model.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
-# Устанавливаем URL из настроек
-settings = get_settings()
-db_url = settings.db_url.unicode_string().replace("+asyncpg", "")
-config.set_main_option("sqlalchemy.url", db_url)
 
 
 def run_migrations_offline() -> None:
