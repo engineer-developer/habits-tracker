@@ -2,7 +2,7 @@ name: habits-tracker
 
 services:
 
-  db:
+  postgres:
     image: postgres:17.0
     environment:
       POSTGRES_HOST: ${DB_HOST}
