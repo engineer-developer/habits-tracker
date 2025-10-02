@@ -210,3 +210,4 @@ __marimo__/
 
 # Custom ignore section
 /fastapi_app/.db_url
+/fastapi_app/bak/
