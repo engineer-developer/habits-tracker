@@ -7,7 +7,7 @@ AsyncSessionMaker - класс для создания асинхронных с
 
 from typing import Annotated, AsyncIterator
 
-from config import Settings, get_settings
+from app_cfg.config import get_settings
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
@@ -17,12 +17,11 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-CommonSettings = Annotated[Settings, Depends(get_settings)]
+settings = get_settings()
 
-
-def get_async_engine(settings: CommonSettings) -> AsyncEngine:
-    """
-    Получаем асинхронный движок.
+# Создаем асинхронный движок
+async_engine: AsyncEngine = create_async_engine(url=settings.db_url.unicode_string())
+async_engine.execution_options(isolation_level="SERIALIZABLE")
 
     :param settings: Настройки приложения.
     :type settings: CommonSettings
