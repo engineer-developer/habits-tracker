@@ -38,6 +38,8 @@ services:
           path: ./fastapi_app/src/
           target: /app/src/
     restart: unless-stopped
+    networks:
+      - app_network
 
 volumes:
   pg_data:
