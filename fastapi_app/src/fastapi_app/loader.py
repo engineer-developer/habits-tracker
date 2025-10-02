@@ -1,12 +1,12 @@
 """Модуль загрузки сервиса Fastapi."""
 
+from asyncio import get_running_loop
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from alembic_utils import upgrade_to_head
 from app_cfg.config import CommonSettings
 from fastapi import FastAPI
-from asyncio import get_running_loop
 
 
 @asynccontextmanager
@@ -19,7 +19,6 @@ async def lifespan(
     :param app: Экземпляр класса Fastapi.
     :return: Асинхронный итератор.
     """
-
     # Применение миграций alembic
     loop = get_running_loop()
     loop.run_in_executor(None, upgrade_to_head)
