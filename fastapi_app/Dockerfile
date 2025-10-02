@@ -16,7 +16,7 @@ ENV PATH="/root/.local/bin:${PATH}"
 
 RUN pipx install poetry && poetry config virtualenvs.create false
 
-COPY pyproject.toml ./
+COPY pyproject.toml .
 
 RUN poetry install --only main
 
