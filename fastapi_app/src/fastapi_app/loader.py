@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from alembic_utils import upgrade_to_head
-from app_cfg.config import CommonSettings
+from api.api_v1 import router as api_v1_router
 from fastapi import FastAPI
 
 
@@ -25,13 +25,7 @@ async def lifespan(
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(api_v1_router)
 
 
-@app.get("/", name="Get some", description="Get some info")
-async def get_some(settings: CommonSettings) -> dict:
-    """Тестовая ручка.
 
-    :return: db_url
-    """
-    db_url = settings.db_url
-    return {"DB_URL": db_url, "message": "HI Nick"}
