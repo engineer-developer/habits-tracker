@@ -13,6 +13,7 @@ from sqlalchemy import (
     select,
     text,
     BigInteger,
+    Boolean,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -27,8 +28,8 @@ class User(TimestampMixin, Model):
 
     name: Mapped[str]
     password: Mapped[str]
-    telegram_id: Mapped[int] = mapped_column(BigInteger)
-    is_active: Mapped[bool]
+    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
 # class ApiKey(Model):  # type: ignore[name-defined]
