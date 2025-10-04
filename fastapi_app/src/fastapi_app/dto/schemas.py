@@ -27,3 +27,9 @@ class UserOutSchema(UserSchema):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+class UsersListSchema(BaseModel):
+    """Схема для списка пользователей."""
+
+    users: list[UserOutSchema]
