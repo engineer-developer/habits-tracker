@@ -8,18 +8,17 @@ from pydantic import BaseModel, ConfigDict
 class UserSchema(BaseModel):
     """Базовая схема пользователя."""
 
-    pass
+    name: str
+    telegram_id: int
 
 
 class UserInSchema(UserSchema):
     """Схема создания пользователя."""
 
-    name: str
     password: str
-    telegram_id: int
 
 
-class UserOutSchema(UserInSchema):
+class UserOutSchema(UserSchema):
     """Схема вывода информации о пользователе."""
 
     model_config = ConfigDict(from_attributes=True)
