@@ -32,10 +32,11 @@ async def get_all_users(session: CommonAsyncSession) -> UsersListSchema:
     response_model=UserOutSchema,
     status_code=201,
     responses={
+        400: {"description": "Bad request"},
         403: {
             "description": "Ошибка уникальности пользователя",
             "content": {"application/json": {"example": {"detail": "string"}}},
-        }
+        },
     },
 )
 async def add_user(user: UserInSchema, session: CommonAsyncSession) -> UserOutSchema:
