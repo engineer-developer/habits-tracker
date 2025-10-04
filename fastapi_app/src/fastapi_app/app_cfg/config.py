@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     """Настройки сервиса."""
 
     db_url: PostgresDsn = Field(validation_alias="DB_URL")
+    secret_key: str = Field(alias="SECRET_KEY")
 
 
 def get_settings() -> Settings:
