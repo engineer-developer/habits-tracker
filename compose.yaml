@@ -21,6 +21,7 @@ services:
       context: fastapi_app/.
     environment:
       DB_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_INTERNAL_PORT}/${DB_NAME}"
+      SECRET_KEY: ${FASTAPI_SECRET_KEY}
     ports:
       - "${FASTAPI_PORT}:8000"
     depends_on:
