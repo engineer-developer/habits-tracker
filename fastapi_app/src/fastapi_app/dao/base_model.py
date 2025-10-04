@@ -32,7 +32,7 @@ class Model(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
     registry = custom_registry
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
 
 class TimestampMixin:
