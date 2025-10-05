@@ -30,11 +30,13 @@ async def fetch_all_users(
 async def fetch_user_by_telegram_id(
     telegram_id: int, session: AsyncSession
 ) -> Optional[User]:
-    """Извлекаем пользователя из БД"""
+    """Извлекаем пользователя из БД по telegram_id."""
     stmt = select(User).where(User.telegram_id == telegram_id)
     result = await session.execute(stmt)
-    user = result.one_or_none()
-    return user
+    user = result.scalar()
+    if user:
+        logger.debug("Получен пользователь {}", user)
+        return user
 
 
 async def add_user_to_db(user: User, session: AsyncSession) -> Optional[User]:
