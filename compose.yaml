@@ -27,7 +27,7 @@ services:
     depends_on:
       - postgres
     command: >
-      uvicorn src.fastapi_app.loader:app --host 0.0.0.0 --port 8000 --reload
+      uvicorn src.fastapi_app.main:app --host 0.0.0.0 --port 8000 --reload
     develop:
       watch:
         - action: rebuild
@@ -37,6 +37,13 @@ services:
           path: ./fastapi_app/src/
           target: /app/src/
     restart: unless-stopped
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
     networks:
       - backend
 
