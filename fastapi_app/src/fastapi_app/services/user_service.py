@@ -8,12 +8,22 @@ from sqlalchemy.exc import DatabaseError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def fetch_all_users(session: AsyncSession) -> Sequence[User]:
-    """Извлекаем всех активных пользователей из БД"""
-    stmt = select(User).where(User.is_active == True)
+async def fetch_all_users(
+    session: AsyncSession, is_active: bool = False
+) -> Sequence[User]:
+    """Извлекаем всех пользователей из БД
+
+    :param session: Сессия подключения к БД.
+    :param is_active: Флаг получения только активных пользователей.
+    :return: Список пользователей.
+    """
+    if is_active:
+        stmt = select(User).where(User.is_active == True)
+    else:
+        stmt = select(User)
     result = await session.execute(stmt)
     users = result.scalars().all()
-    logger.debug("Got users: {}", users)
+    logger.debug("Получены пользователи: {}", users)
     return users
 
 
