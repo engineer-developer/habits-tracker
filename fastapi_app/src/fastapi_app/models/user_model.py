@@ -1,4 +1,4 @@
-"""Модуль создания моделей базы данных."""
+"""Модуль модели таблицы базы данных для пользователя."""
 
 from sqlalchemy import (
     BigInteger,
@@ -25,3 +25,6 @@ class User(TimestampMixin, Model):
         default=True,
         server_default=text("true"),
     )
+
+    def __repr__(self):
+        return f"<User id-{self.id}>"
