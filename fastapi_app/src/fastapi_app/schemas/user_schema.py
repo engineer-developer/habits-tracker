@@ -1,17 +1,18 @@
-"""Модуль схем пользователя."""
+"""Модуль схемы валидации и сериализации пользователя."""
 
 from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserSchema(BaseModel):
     """Базовая схема пользователя."""
 
     first_name: str
-    last_name: str
-    username: str
-    telegram_id: int
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    telegram_id: int = Field(gt=0)
 
 
 class UserInSchema(UserSchema):
