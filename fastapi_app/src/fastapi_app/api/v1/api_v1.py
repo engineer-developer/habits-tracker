@@ -1,10 +1,10 @@
 from core.loguru_config import logger
 from fastapi.routing import APIRouter
-from routers.user_router import router as users_router
+from api.v1.user_router import router as users_router
 
 API_VERSION = "0.1.0"
 
-router = APIRouter(prefix="/api", )
+router = APIRouter(prefix="/api/v1", )
 
 router.include_router(users_router)
 
