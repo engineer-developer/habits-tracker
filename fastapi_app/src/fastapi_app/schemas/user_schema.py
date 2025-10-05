@@ -8,7 +8,9 @@ from pydantic import BaseModel, ConfigDict
 class UserSchema(BaseModel):
     """Базовая схема пользователя."""
 
-    name: str
+    first_name: str
+    last_name: str
+    username: str
     telegram_id: int
 
 

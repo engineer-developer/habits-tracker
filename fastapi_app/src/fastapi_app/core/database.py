@@ -6,7 +6,7 @@ AsyncSessionMaker - класс для создания асинхронных с
 
 from typing import Annotated, AsyncIterator
 
-from app_cfg.config import get_settings
+from core.config import get_settings
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,

@@ -13,8 +13,8 @@ import sys
 
 # Добавляем корень проекта в PYTHONPATH
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from dao.base_model import Model
-from dao.models import User
+from models.base_model import Model
+from models.user_model import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
