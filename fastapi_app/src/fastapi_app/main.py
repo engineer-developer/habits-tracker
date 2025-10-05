@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from alembic_utils import upgrade_to_head
-from api.api_v1 import router as api_v1_router
+from api.v1.api_v1 import router as api_v1_router
 from fastapi import FastAPI
 
 
