@@ -46,9 +46,9 @@ async def add_user_to_db(user: User, session: AsyncSession) -> Optional[User]:
     session.add(user)
     try:
         await session.commit()
-        logger.info("Пользователь {} добавлен.", user.first_name)
+        logger.info("Пользователь {} добавлен.", user)
         return user
     except IntegrityError:
-        logger.error("Пользователь уже есть в БД")
+        logger.error("Пользователь уже есть в БД.")
     except DatabaseError as exc:
         logger.error("{} - {}", exc.__class__.__name__, exc.args[0])
