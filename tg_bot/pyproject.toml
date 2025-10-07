@@ -6,13 +6,19 @@ authors = [
     {name = "Alex Suslov",email = "suslov.lexx@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<4.0"
 dependencies = [
+    "pytelegrambotapi (>=4.29.1,<5.0.0)",
+    "pydantic-settings (>=2.11.0,<3.0.0)",
+    "loguru (>=0.7.3,<0.8.0)"
 ]
 
 [tool.poetry]
 packages = [{include = "tg_bot", from = "src"}]
 
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.13.3"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
