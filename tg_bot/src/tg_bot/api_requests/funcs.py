@@ -1,24 +1,17 @@
-import requests
-
-from core.config import get_settings, Settings
-
-settings: Settings = get_settings()
+"""Модуль для работы с запросами."""
 
 
-def make_request_to_api(message, url):
-    headers = {"telegram_id": str(message.from_user.id)}
-    url = settings.api_url + url
-
-    try:
-        response = requests.post(url, headers=headers)
-        if response.status_code == 200:
+from requests import Session
 
 
-            response_data = response.json()
+def get_request_session_with_headers(telegram_id: str | int) -> Session:
+    """Получаем сессию запроса с заголовком, содержащим telegram_id."""
+    if isinstance(telegram_id, int):
+        telegram_id = str(telegram_id)
+
+    session = Session()
+    session.headers.update({"telegram_id": telegram_id})
+    return session
 
 
 
-
-
-    except ConnectTimeout:
-        bot.reply_to(message, "Ошибка соединения. Попробуйте еще раз.")
