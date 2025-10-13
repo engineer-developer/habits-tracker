@@ -1,5 +1,9 @@
 """Модуль операций с пользователями."""
 
+from typing import Annotated, Optional, Sequence
+
+from auth.utils import get_auth_key
+from core.database import CommonAsyncSession
 from core.loguru_config import logger
 from fastapi import Depends
 from models.app_models import User
@@ -28,15 +32,16 @@ async def fetch_all_users(
 
 
 async def fetch_user_by_telegram_id(
-    telegram_id: int, session: AsyncSession
+    telegram_id: Annotated[int, Depends(get_auth_key)],
+    session: CommonAsyncSession,
 ) -> Optional[User]:
-    """Извлекаем пользователя из БД по telegram_id."""
+    """Получаем пользователя из БД по telegram_id, переданному через заголовки."""
     stmt = select(User).where(User.telegram_id == telegram_id)
     result = await session.execute(stmt)
-    user = result.scalar()
+    user = result.scalar_one_or_none()
     if user:
         logger.debug("Получен пользователь {}", user)
-        return user
+    return user
 
 
 async def add_user_to_db(user: User, session: AsyncSession) -> Optional[User]:
