@@ -2,6 +2,7 @@
 
 from typing import Annotated, Optional, Sequence
 
+from auth.password_handler import get_password_hash
 from auth.utils import get_auth_key
 from core.database import CommonAsyncSession
 from core.loguru_config import logger
@@ -44,10 +45,10 @@ async def fetch_user_by_telegram_id(
     return user
 
 
-async def add_user_to_db(user: User, session: AsyncSession) -> Optional[User]:
-    """Добавляем пользователя в базу данных"""
-    user_hash_password = await get_password_hash(user.password)
-    user.password = user_hash_password
+async def insert_user_to_db(user: User, session: AsyncSession) -> Optional[User]:
+    """Добавляем пользователя в базу данных."""
+    user_hashed_password = await get_password_hash(user.password)
+    user.password = user_hashed_password
     session.add(user)
     try:
         await session.commit()
