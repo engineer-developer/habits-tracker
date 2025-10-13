@@ -1,15 +1,20 @@
+"""Модуль запуска бота."""
+
 from core.bot_factory import bot
+from core.config import Settings, get_settings
 from core.loguru_config import logger
-from handlers.command_handlers import process_start
+from handlers.command_handlers import register_command_handlers
+from telebot import TeleBot
 
 
-def main():
-    """Запуск бота."""
-    bot.register_message_handler(process_start, commands=["start"], pass_bot=True)
+def main(bot: TeleBot, settings: Settings)->None:
+    """Функция инициализации хэндлеров и запуска бота."""
+    register_command_handlers(bot=bot, settings=settings)
 
     logger.debug("Start bot.")
     bot.infinity_polling(skip_pending=True)
 
 
 if __name__ == "__main__":
-    main()
+    settings = get_settings()
+    main(bot=bot, settings=settings)
