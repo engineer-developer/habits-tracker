@@ -1,8 +1,8 @@
-from typing import Sequence, Optional
+"""Модуль операций с пользователями."""
 
 from core.loguru_config import logger
-from services.auth.password_handler import get_password_hash
-from models.user_model import User
+from fastapi import Depends
+from models.app_models import User
 from sqlalchemy import select
 from sqlalchemy.exc import DatabaseError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,14 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def fetch_all_users(
     session: AsyncSession, is_active: bool = False
 ) -> Sequence[User]:
-    """Извлекаем всех пользователей из БД
+    """Извлекаем всех пользователей из БД.
 
     :param session: Сессия подключения к БД.
     :param is_active: Флаг получения только активных пользователей.
     :return: Список пользователей.
     """
     if is_active:
-        stmt = select(User).where(User.is_active == True)
+        stmt = select(User).where(User.is_active)
     else:
         stmt = select(User)
     result = await session.execute(stmt)
