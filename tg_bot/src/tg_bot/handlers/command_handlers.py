@@ -47,7 +47,7 @@ def register_command_handlers(bot: TeleBot, settings: Settings) -> None:
                     f"Приветствую {message.from_user.first_name}.\n" + answer.text,
                     reply_markup=answer.keyboard,
                 )
-                logger.debug("Бот отправил сообщение с id {}", msg.message_id)
+                logger.debug("Бот отправил сообщение с id {}.", msg.message_id)
             else:
                 logger.error("Ответ с кодом {}", response.status_code)
                 bot.reply_to(message, "Не удалось получить сведения.")
