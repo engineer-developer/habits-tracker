@@ -3,14 +3,13 @@
 from core.bot_factory import bot
 from core.config import Settings, get_settings
 from core.loguru_config import logger
-from handlers.command_handlers import register_command_handlers
+from handlers import register_handlers
 from telebot import TeleBot
 
 
 def main(bot: TeleBot, settings: Settings)->None:
     """Функция инициализации хэндлеров и запуска бота."""
-    register_command_handlers(bot=bot, settings=settings)
-
+    register_handlers(bot, settings)
     logger.debug("Start bot.")
     bot.infinity_polling(skip_pending=True)
 
