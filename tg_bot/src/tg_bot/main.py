@@ -7,7 +7,7 @@ from handlers import register_handlers
 from telebot import TeleBot
 
 
-def main(bot: TeleBot, settings: Settings)->None:
+def main(bot: TeleBot, settings: Settings) -> None:
     """Функция инициализации хэндлеров и запуска бота."""
     register_handlers(bot, settings)
     logger.debug("Start bot.")
