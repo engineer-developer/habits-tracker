@@ -8,7 +8,7 @@ from services.user_service import fetch_user_by_telegram_id
 from schemas.user_schema import UserOutSchema
 
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.get("/")
