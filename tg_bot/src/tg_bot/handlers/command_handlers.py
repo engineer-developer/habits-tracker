@@ -8,7 +8,7 @@ from core.config import Settings
 from core.loguru_config import logger
 from keyboards import kb_factory
 from requests import Response
-from requests.exceptions import ConnectTimeout
+from requests.exceptions import ConnectTimeout, ConnectionError
 from requests.status_codes import codes
 from telebot import TeleBot
 from telebot.types import InlineKeyboardMarkup, Message
@@ -52,8 +52,11 @@ def register_command_handlers(bot: TeleBot, settings: Settings) -> None:
                 logger.error("Ответ с кодом {}", response.status_code)
                 bot.reply_to(message, "Не удалось получить сведения.")
 
-        except ConnectTimeout:
-            bot.reply_to(message, "Ошибка соединения. Попробуйте еще раз.")
+        except ConnectTimeout as exc:
+            logger.error("Ошибка соединения: {}", exc)
+        except ConnectionError as exc:
+            logger.error("Невозможно установить соединение - {}.", exc.__class__.__name__)
+
 
     def get_user_status(response: Response) -> Optional[str]:
         """Получаем статус пользователя из http-ответа."""
