@@ -13,12 +13,11 @@ from telebot.types import Message
 def register_message_handlers(bot: TeleBot, settings: Settings) -> None:
     """Функция регистрации обработчиков сообщений."""
 
-    @bot.message_handler(state=AuthStates.wait_password, content_types=["text"])
+    @bot.message_handler(state=AuthStates.wait_password)
     def get_password_and_register(message: Message) -> None:
         """Получаем пароль и отправляем запрос на бэкэнд для регистрации."""
         chat_id = message.chat.id
         password = message.text
-        logger.debug("Get password: {}", password)
 
         url = settings.api_url + "auth/register/"
         data = {"telegram_id": message.from_user.id, "password": password}
