@@ -41,5 +41,9 @@ def register_message_handlers(bot: TeleBot, settings: Settings) -> None:
             bot.send_message(
                 chat_id=chat_id, text="Ошибка соединения. Попробуйте еще раз."
             )
+        except ConnectionError as exc:
+            logger.error(
+                "Невозможно установить соединение - {}.", exc.__class__.__name__
+            )
         finally:
             bot.delete_message(chat_id=chat_id, message_id=message.id)
