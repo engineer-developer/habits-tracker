@@ -21,8 +21,42 @@ class Answer:
     text: str
     keyboard: InlineKeyboardMarkup
 
+@dataclass
+class AnswerProcessor:
+    """Класс подготовки ответа."""
 
 def register_command_handlers(bot: TeleBot, settings: Settings) -> None:
+    handlers: dict[str, Callable] | None = None
+
+    def __post_init__(self) -> None:
+        """Инициализируем словарь после создания экземпляра."""
+        if self.handlers is None:
+            self.handlers = {
+                "not_registered": self._handle_not_registered,
+                "not_logged_in": self._handle_not_logged_in,
+                "logged": self._handle_logged,
+            }
+
+    def prepare_answer(self, user_status: str) -> Answer:
+        """Выбор метода обработки на основе статуса пользователя."""
+        handler = self.handlers.get(user_status, self._handle_unknown)
+        answer: Answer = handler()
+        return answer
+
+    def _handle_not_registered(self) -> Answer:
+        return Answer("Пожалуйста зарегистрируйтесь.", kb_factory.kb_register)
+
+    def _handle_not_logged_in(self) -> Answer:
+        return Answer("Войдите в систему.", kb_factory.kb_login)
+
+    def _handle_logged(self) -> Answer:
+        return Answer("Войдите в личный кабинет.", kb_factory.kb_personal_account)
+
+    def _handle_unknown(self) -> Answer:
+        logger.error("Не найден обработчик для полученного статуса пользователя.")
+        return Answer("Непредвиденная ошибка.", None)
+
+
     """Регистрируем обработчики команд."""
 
     @bot.message_handler(commands=["start"])
