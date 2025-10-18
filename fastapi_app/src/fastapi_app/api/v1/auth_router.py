@@ -15,9 +15,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def auth(user: Annotated[User, Depends(fetch_user_by_telegram_id)]):
     """Представление для аутентификации пользователя."""
     if not user:
-        user_status = "not registered"
+        user_status = "not_registered"
     elif user and not user.is_active:
-        user_status = "not logged in"
+        user_status = "not_logged_in"
     elif user and user.is_active:
         user_status = "logged"
     else:
