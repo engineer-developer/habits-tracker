@@ -11,6 +11,15 @@ def get_start_kb(text: str, callback_data: str) -> InlineKeyboardMarkup:
     return markup
 
 
-personal_account_kb = get_start_kb("Личный кабинет", "cb_personal_account")
-login_kb = get_start_kb("Войти", "cb_login")
-register_kb = get_start_kb("Зарегистрироваться", "cb_register")
+kb_personal_account = get_start_kb(
+    text="Личный кабинет",
+    callback_data="cb_personal_account",
+)
+kb_login = get_start_kb(
+    text="Войти",
+    callback_data="cb_login",
+)
+kb_register = get_start_kb(
+    text="Зарегистрироваться",
+    callback_data="cb_register",
+)
