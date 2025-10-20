@@ -1,27 +1,39 @@
 """Модуль схемы валидации и сериализации пользователя."""
 
+import enum
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 
-class UserSchema(BaseModel):
+class UserBaseSchema(BaseModel):
     """Базовая схема пользователя."""
+
+    telegram_id: int = Field(gt=0)
+
+
+class UserExtendSchema(UserBaseSchema):
+    """Расширенная схема пользователя."""
 
     first_name: str
     last_name: Optional[str] = None
     username: Optional[str] = None
-    telegram_id: int = Field(gt=0)
 
 
-class UserInSchema(UserSchema):
-    """Схема создания пользователя."""
+class UserCredentials(UserBaseSchema):
+    """Схема аутентификации пользователя."""
 
     password: str
 
 
-class UserOutSchema(UserSchema):
+class UserInSchema(UserExtendSchema):
+    """Схема добавления пользователя."""
+
+    password: str
+
+
+class UserOutSchema(UserExtendSchema):
     """Схема вывода информации о пользователе."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -36,3 +48,22 @@ class UsersListSchema(BaseModel):
     """Схема для списка пользователей."""
 
     users: list[UserOutSchema]
+
+
+class UserAuthStatusChoices(enum.Enum):
+    """Перечень состояний аутентификации пользователя."""
+
+    not_registered: str = "not_registered"
+    not_logged_in: str = "not_logged_in"
+    logged: str = "logged"
+
+
+class UserAuthStatus(BaseModel):
+    """Класс состояний аутентификации пользователя."""
+
+    model_config = ConfigDict(use_enum_values=True)
+
+    status: UserAuthStatusChoices = Field(
+        default=UserAuthStatusChoices.not_registered.value,
+        validate_default=True,
+    )
