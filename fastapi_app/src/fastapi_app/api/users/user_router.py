@@ -8,7 +8,7 @@ from fastapi.params import Query
 from fastapi.routing import APIRouter
 from models.app_models import User
 from schemas.user_schema import UserInSchema, UserOutSchema, UsersListSchema
-from services.user_service import insert_user_to_db, fetch_all_users
+from services.user_service import add_user_to_db, fetch_all_users
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -57,7 +57,7 @@ async def add_user(session: CommonAsyncSession, user: UserInSchema) -> UserOutSc
     :return: Данные созданного пользователя.
     """
     user_orm: User = User(**user.model_dump())
-    user_from_db: User = await insert_user_to_db(user=user_orm, session=session)
+    user_from_db: User = await add_user_to_db(user=user_orm, session=session)
     if not user_from_db:
         raise HTTPException(status_code=400, detail="Ошибка добавления пользователя")
     return UserOutSchema.model_validate(user_from_db)
