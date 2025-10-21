@@ -4,8 +4,9 @@ from asyncio import get_running_loop
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
+import uvicorn
 from alembic_utils import upgrade_to_head
-from api.v1.api_v1 import router as api_v1_router
+from api.api_router import router as api_router
 from fastapi import FastAPI
 
 
@@ -25,7 +26,8 @@ async def lifespan(
 
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(api_v1_router)
+app.include_router(api_router)
 
 
-
+if __name__ == "__main__":
+    uvicorn.run("main:app", reload=True)
