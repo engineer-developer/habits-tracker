@@ -50,5 +50,6 @@ async def get_engine_connection() -> AsyncIterator[AsyncConnection]:
     async with async_engine.begin() as connection:
         yield connection
 
+
 CommonAsyncSession = Annotated[AsyncSession, Depends(get_async_session)]
 CommonAsyncConnection = Annotated[AsyncConnection, Depends(get_engine_connection)]

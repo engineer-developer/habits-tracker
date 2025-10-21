@@ -22,24 +22,5 @@ class User(TimestampMixin, Model):
         server_default=text("true"),
     )
 
-    session: Mapped["AuthSession"] = relationship(back_populates="user")
-
     def __repr__(self):
         return f"<User id-{self.id}>"
-
-
-class AuthSession(TimestampMixin, Model):
-    """Модель сессии аутентификации."""
-
-    __tablename__ = "sessions"
-
-    session_id: Mapped[str] = mapped_column(String, unique=True, default=uuid4().hex)
-    jwt: Mapped[str]
-
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
-    )
-    user: Mapped["User"] = relationship(back_populates="session")
-
-    def __repr__(self):
-        return f"<Login session: {self.session_id}>"
