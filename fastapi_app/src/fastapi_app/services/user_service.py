@@ -1,12 +1,10 @@
 """Модуль операций с пользователями."""
 
-from typing import Annotated, Optional, Sequence
+from typing import Optional, Sequence
 
-from auth.password_handler import get_password_hash
-from auth.utils import get_auth_key
+from api.auth.password_handler import get_password_hash
 from core.database import CommonAsyncSession
 from core.loguru_config import logger
-from fastapi import Depends
 from models.app_models import User
 from sqlalchemy import select
 from sqlalchemy.exc import DatabaseError, IntegrityError
