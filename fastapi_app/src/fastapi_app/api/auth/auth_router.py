@@ -27,18 +27,24 @@ async def login(
     session: CommonAsyncSession,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Token:
-    """Выдает jwt-токен для последующей аутентификации.
+    """Реализация входа пользователя в систему.
 
-    OAuth2PasswordRequestForm требует обязательного указания username и password.
+    Принимает 'username' и 'password' переданные в body в виде 'application/x-www-form-urlencoded'
+    и выдает jwt-токен для последующей аутентификации.
+
+    OAuth2PasswordRequestForm требует обязательного указания 'username' и 'password'.
+    При взаимодействии с telegram ботом 'username' = 'user.id'.
     """
     telegram_id = form_data.username
     password = form_data.password
 
     if not telegram_id.isdigit():
-        raise HTTPException(403, "telegram_id должен содержать только цифры.")
+        logger.error("'username' должен содержать только цифры.")
+        raise HTTPException(403, "'username' должен содержать только цифры.")
 
     user: User = await fetch_user_by_telegram_id(int(telegram_id), session)
     if not user:
+        logger.error("Пользователь не найден.")
         raise HTTPException(
             404, "Пользователь не найден. Пожалуйста зарегистрируйтесь."
         )
@@ -47,13 +53,12 @@ async def login(
         plain_password=password, hashed_password=user.password
     )
     if not is_valid_password:
+        logger.error("Неверный пароль.")
         raise HTTPException(403, "Неверные пользователь или пароль.")
 
     data = {"sub": str(user.telegram_id)}
     jwt_token = create_access_token(data=data)
     access_token = Token(access_token=jwt_token, token_type="Bearer")
-
-    logger.debug("token: {}", access_token)
     return access_token
 
 
