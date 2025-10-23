@@ -49,21 +49,3 @@ class UsersListSchema(BaseModel):
 
     users: list[UserOutSchema]
 
-
-class UserAuthStatusChoices(enum.Enum):
-    """Перечень состояний аутентификации пользователя."""
-
-    not_registered: str = "not_registered"
-    not_logged_in: str = "not_logged_in"
-    logged: str = "logged"
-
-
-class UserAuthStatus(BaseModel):
-    """Класс состояний аутентификации пользователя."""
-
-    model_config = ConfigDict(use_enum_values=True)
-
-    status: UserAuthStatusChoices = Field(
-        default=UserAuthStatusChoices.not_registered.value,
-        validate_default=True,
-    )
