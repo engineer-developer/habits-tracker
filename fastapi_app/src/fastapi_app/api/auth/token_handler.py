@@ -36,22 +36,25 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 
-def verify_access_token(token: Annotated[str, Depends(auth_scheme)]) -> dict:
+def verify_access_token(token: Annotated[str, Depends(auth_scheme)]) -> str:
     """Проверяем jwt-токен.
 
     Возвращаем декодированные данные.
 
-    :return: sub_data
-    :rtype: dict
+    :return: Данные, ранее помещенные в "sub", в данном проекте значение 'telegram_id'.
+    :rtype: str.
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        sub_data: dict = payload.get("sub")
+        logger.debug("payload: {}", payload)
+
+        sub_data: str = payload.get("sub")
         if sub_data is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Токен не содержит данных.",
             )
+        logger.debug("sub_data: {}", sub_data)
         return sub_data
 
     except ExpiredSignatureError:
