@@ -27,9 +27,12 @@ async def login(
     session: CommonAsyncSession,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Token:
-    """Реализация входа пользователя в систему.
+    """Представление аутентификации пользователя.
 
-    Принимает 'username' и 'password' переданные в body в виде 'application/x-www-form-urlencoded'
+    Представляет собой реализацию входа пользователя в систему.
+
+    form_data принимает 'username' и 'password' переданные в body
+    в виде 'application/x-www-form-urlencoded'
     и выдает jwt-токен для последующей аутентификации.
 
     OAuth2PasswordRequestForm требует обязательного указания 'username' и 'password'.
