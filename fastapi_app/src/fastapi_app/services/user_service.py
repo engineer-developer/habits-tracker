@@ -35,10 +35,10 @@ async def fetch_all_users(
 
 
 async def fetch_user_by_telegram_id(
-    telegram_id: Annotated[int, Depends(get_auth_key)],
+    telegram_id: int,
     session: CommonAsyncSession,
 ) -> Optional[User]:
-    """Получаем пользователя из БД по telegram_id, переданному через заголовки."""
+    """Получаем пользователя из БД по telegram_id."""
     stmt = select(User).where(User.telegram_id == telegram_id)
     result = await session.execute(stmt)
     user = result.scalar_one_or_none()
