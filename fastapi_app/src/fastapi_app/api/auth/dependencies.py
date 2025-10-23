@@ -7,6 +7,7 @@ from starlette import status
 
 from api.auth.token_handler import verify_access_token
 from core.database import CommonAsyncSession
+from core.loguru_config import logger
 from models.app_models import User
 from services.user_service import fetch_user_by_telegram_id
 
@@ -35,3 +36,21 @@ async def get_current_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден."
         )
     return user
+
+
+async def get_current_active_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> Optional[User]:
+    """Получаем текущего активного пользователя.
+
+    :param current_user: Текущий пользователь.
+    :return: User - активный пользователь.
+    :rtype: User.
+    """
+
+    if not current_user.is_active:
+        logger.error("Пользователь не активен.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Пользователь не активен."
+        )
+    return current_user
