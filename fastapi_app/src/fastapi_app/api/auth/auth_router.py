@@ -10,13 +10,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from models.app_models import User
 from pydantic import ValidationError
 from schemas.auth_schema import Token
-from schemas.user_schema import (
-    UserInSchema,
-)
+from schemas.user_schema import UserInSchema
 from services.user_service import add_user_to_db, fetch_user_by_telegram_id
 
 from api.auth.password_handler import verify_password
-from api.auth.token_handler import create_access_token, verify_access_token
+from api.auth.token_handler import create_access_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -69,7 +67,9 @@ async def login(
 @router.post("/register/", status_code=200, response_model=Token)
 async def register_user(user: UserInSchema, session: CommonAsyncSession) -> Token:
     """Представление регистрации пользователя."""
-    user_orm = await fetch_user_by_telegram_id(user.telegram_id, session)
+    user_orm = await fetch_user_by_telegram_id(
+        session=session, telegram_id=user.telegram_id
+    )
     if user_orm:
         raise HTTPException(403, "Такой пользователь уже зарегистрирован.")
 
@@ -79,7 +79,7 @@ async def register_user(user: UserInSchema, session: CommonAsyncSession) -> Toke
         logger.error(exc.errors())
         raise HTTPException(status_code=400, detail="Ошибка добавления пользователя.")
 
-    user_from_db: Optional[User] = await add_user_to_db(user=user_orm, session=session)
+    user_from_db: Optional[User] = await add_user_to_db(session=session, user=user_orm)
     if not user_from_db:
         raise HTTPException(status_code=400, detail="Ошибка добавления пользователя.")
 
