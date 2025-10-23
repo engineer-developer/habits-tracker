@@ -2,9 +2,10 @@
 
 from typing import Annotated, Sequence
 
+from api.auth.dependencies import get_current_user
 from core.database import CommonAsyncSession
 from fastapi.exceptions import HTTPException
-from fastapi.params import Query
+from fastapi.params import Query, Depends
 from fastapi.routing import APIRouter
 from models.app_models import User
 from schemas.user_schema import UserInSchema, UserOutSchema, UsersListSchema
@@ -61,3 +62,11 @@ async def add_user(session: CommonAsyncSession, user: UserInSchema) -> UserOutSc
     if not user_from_db:
         raise HTTPException(status_code=400, detail="Ошибка добавления пользователя")
     return UserOutSchema.model_validate(user_from_db)
+
+
+@router.get("/profile/", response_model=UserOutSchema, status_code=200)
+async def get_profile(
+    user: Annotated[User, Depends(get_current_user)],
+) -> UserOutSchema:
+    """Получаем данные зарегистрированного и аутентифицированного пользователя."""
+    return UserOutSchema.model_validate(user)
