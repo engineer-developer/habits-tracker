@@ -47,7 +47,10 @@ async def fetch_user_by_telegram_id(
     return user
 
 
-async def insert_user_to_db(user: User, session: AsyncSession) -> Optional[User]:
+async def add_user_to_db(
+    user: User,
+    session: AsyncSession,
+) -> Optional[User]:
     """Добавляем пользователя в базу данных."""
     user_hashed_password = await get_password_hash(user.password)
     user.password = user_hashed_password
