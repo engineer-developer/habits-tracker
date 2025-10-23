@@ -14,7 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def fetch_all_users(
-    session: AsyncSession, is_active: bool = False
+    session: AsyncSession,
+    is_active: bool = False,
 ) -> Sequence[User]:
     """Извлекаем всех пользователей из БД.
 
@@ -22,10 +23,11 @@ async def fetch_all_users(
     :param is_active: Флаг получения только активных пользователей.
     :return: Список пользователей.
     """
+    stmt = select(User)
+
     if is_active:
-        stmt = select(User).where(User.is_active)
-    else:
-        stmt = select(User)
+        stmt = stmt.where(User.is_active)
+
     result = await session.execute(stmt)
     users = result.scalars().all()
     logger.debug("Получены пользователи: {}", users)
