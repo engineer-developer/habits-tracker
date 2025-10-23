@@ -1,11 +1,10 @@
 """Модуль представлений аутентификации."""
 
-from typing import Annotated, Optional
+from typing import Optional
 
 from core.database import CommonAsyncSession
 from core.loguru_config import logger
 from fastapi import Depends, HTTPException
-from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from models.app_models import User
@@ -45,7 +44,9 @@ async def login(
         logger.error("'username' должен содержать только цифры.")
         raise HTTPException(403, "'username' должен содержать только цифры.")
 
-    user: User = await fetch_user_by_telegram_id(int(telegram_id), session)
+    user: User = await fetch_user_by_telegram_id(
+        session=session, telegram_id=int(telegram_id)
+    )
     if not user:
         logger.error("Пользователь не найден.")
         raise HTTPException(
