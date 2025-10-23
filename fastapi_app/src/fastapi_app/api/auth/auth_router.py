@@ -22,17 +22,6 @@ from api.auth.token_handler import create_access_token, verify_access_token
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.get("/", response_class=JSONResponse, deprecated=True)
-async def check_auth(
-    data: Annotated[dict, Depends(verify_access_token)],
-) -> JSONResponse:
-    """Temporary - Check auth func."""
-    if not data:
-        raise HTTPException(404, "No data")
-
-    return JSONResponse({"status": "ok", "data": data}, 200)
-
-
 @router.post("/login/", response_model=Token)
 async def login(
     session: CommonAsyncSession,
