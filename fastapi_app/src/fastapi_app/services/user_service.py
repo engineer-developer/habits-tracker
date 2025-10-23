@@ -3,7 +3,6 @@
 from typing import Optional, Sequence
 
 from api.auth.password_handler import get_password_hash
-from core.database import CommonAsyncSession
 from core.loguru_config import logger
 from models.app_models import User
 from sqlalchemy import select
@@ -33,8 +32,8 @@ async def fetch_all_users(
 
 
 async def fetch_user_by_telegram_id(
+    session: AsyncSession,
     telegram_id: int,
-    session: CommonAsyncSession,
 ) -> Optional[User]:
     """Получаем пользователя из БД по telegram_id."""
     stmt = select(User).where(User.telegram_id == telegram_id)
@@ -46,8 +45,8 @@ async def fetch_user_by_telegram_id(
 
 
 async def add_user_to_db(
-    user: User,
     session: AsyncSession,
+    user: User,
 ) -> Optional[User]:
     """Добавляем пользователя в базу данных."""
     user_hashed_password = await get_password_hash(user.password)
