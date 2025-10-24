@@ -19,10 +19,7 @@ class User(TimestampMixin, Model):
         default=True,
         server_default=text("true"),
     )
-    habits: Mapped[list["Habit"]] = relationship(
-        secondary="association_table",
-        back_populates="users",
-    )
+    habits: Mapped[list["Habit"]] = relationship(back_populates="user")
 
     def __repr__(self):
         return f"<User id-{self.id}>"
