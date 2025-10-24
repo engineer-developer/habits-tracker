@@ -32,6 +32,7 @@ async def get_current_user(
         session=session,
     )
     if not user:
+        logger.error("Пользователь с {} не найден.", telegram_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден."
         )
