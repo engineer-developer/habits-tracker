@@ -11,10 +11,10 @@ from alembic import context
 import os
 import sys
 
-# Добавляем корень проекта в PYTHONPATH
+# Добавляем корень проекта в path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.base_model import Model
-from models.app_models import User
+from models.base_model import Base
+from models import app_models  # не удалять
 from core.config import get_settings
 
 settings = get_settings()
@@ -40,7 +40,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = Model.metadata
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
