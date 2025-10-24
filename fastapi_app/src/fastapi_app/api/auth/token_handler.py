@@ -45,13 +45,13 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 
-def verify_access_token(token: Annotated[str, Depends(auth_scheme)]) -> str:
+def verify_access_token(token: Annotated[str, Depends(get_access_token)]) -> str:
     """Проверяем jwt-токен.
 
     Возвращаем декодированные данные.
 
     :return: Данные, ранее помещенные в "sub", в данном проекте значение 'telegram_id'.
-    :rtype: str.
+    :rtype: String.
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -67,6 +67,7 @@ def verify_access_token(token: Annotated[str, Depends(auth_scheme)]) -> str:
         return sub_data
 
     except ExpiredSignatureError:
+        logger.error("Срок действия токена истек")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Срок действия токена истек.",
