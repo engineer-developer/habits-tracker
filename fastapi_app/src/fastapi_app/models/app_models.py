@@ -30,12 +30,11 @@ class Habit(TimestampMixin, Model):
 
     __tablename__ = "habits"
 
-    name: Mapped[str] = mapped_column(String(100), unique=True)
-    description: Mapped[str] = mapped_column(server_default="")
-    users: Mapped[list["User"]] = relationship(
-        secondary="association_table",
-        back_populates="habits",
-    )
+    name: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str] = mapped_column(default="", server_default="")
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+
+    user: Mapped[list["User"]] = relationship(back_populates="habits")
 
     def __repr__(self):
         return f"<Habit id-{self.id}>"
