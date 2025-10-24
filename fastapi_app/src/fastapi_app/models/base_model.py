@@ -26,7 +26,7 @@ metadata = MetaData(naming_convention=naming_convention)
 custom_registry = registry(metadata=metadata)
 
 
-class Model(AsyncAttrs, DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     """Базовая модель."""
 
     __abstract__ = True
