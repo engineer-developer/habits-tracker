@@ -32,6 +32,11 @@ class Base(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
     registry = custom_registry
 
+
+class Model(Base):
+    """Модель с id."""
+
+    __abstract__ = True
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
 
