@@ -47,16 +47,14 @@ async def login(
     )
     if not user:
         logger.error("Пользователь не найден.")
-        raise HTTPException(
-            404, "Пользователь не найден. Пожалуйста зарегистрируйтесь."
-        )
+        raise HTTPException(404, "Пользователь не зарегистрирован.")
 
     is_valid_password = await verify_password(
         plain_password=password, hashed_password=user.password
     )
     if not is_valid_password:
         logger.error("Неверный пароль.")
-        raise HTTPException(403, "Неверные пользователь или пароль.")
+        raise HTTPException(401, "Неверные пользователь или пароль.")
 
     data = {"sub": str(user.telegram_id)}
     jwt_token = create_access_token(data=data)
