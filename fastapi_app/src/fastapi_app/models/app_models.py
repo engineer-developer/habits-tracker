@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from sqlalchemy import BigInteger, Boolean, text, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,3 +22,20 @@ class User(TimestampMixin, Model):
 
     def __repr__(self):
         return f"<User id-{self.id}>"
+
+
+class Habit(TimestampMixin, Model):
+    """Модель привычки."""
+
+    __tablename__ = "habits"
+
+    name: Mapped[str] = mapped_column(String(100), unique=True)
+    description: Mapped[str] = mapped_column(server_default="")
+    users: Mapped[list["User"]] = relationship(
+        secondary="association_table",
+        back_populates="habits",
+    )
+
+    def __repr__(self):
+        return f"<Habit id-{self.id}>"
+
