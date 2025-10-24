@@ -1,7 +1,7 @@
 from sqlalchemy import BigInteger, Boolean, text, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base_model import TimestampMixin, Model
+from models.base_model import TimestampMixin, Model, Base
 
 
 class User(TimestampMixin, Model):
@@ -43,3 +43,12 @@ class Habit(TimestampMixin, Model):
     def __repr__(self):
         return f"<Habit id-{self.id}>"
 
+
+class Association(Base):
+    __tablename__ = "association_table"
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    habit_id: Mapped[int] = mapped_column(
+        ForeignKey("habits.id", ondelete="CASCADE"), primary_key=True
+    )
