@@ -40,19 +40,19 @@ services:
     networks:
       - backend
 
-#  redis:
-#    image: redis
-#    ports:
-#      - "6379:6379"
-#    restart: always
-#    volumes:
-#      - redis_data:/data
-#    networks:
-#      - backend
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
 
 volumes:
   pg_data:
-#  redis_data:
+  redis_data:
 
 networks:
   backend:
