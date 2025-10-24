@@ -19,6 +19,14 @@ EXPIRE_TIME = settings.access_token_expire_minutes
 auth_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login/")
 
 
+def get_access_token(token: Annotated[str | None, Depends(auth_scheme)] = None) -> str:
+    """Получаем токен аутентификации."""
+    if not token:
+        raise HTTPException(404, "Токен аутентификации не найден.")
+    logger.debug("Получен токен: {}", token)
+    return token
+
+
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Создаем jwt-токен."""
     to_encode = data.copy()
