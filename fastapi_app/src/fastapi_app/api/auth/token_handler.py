@@ -13,6 +13,7 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 settings = get_settings()
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
+EXPIRE_TIME = settings.access_token_expire_minutes
 
 
 auth_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login/")
@@ -25,7 +26,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=30)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=EXPIRE_TIME)
 
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
