@@ -38,3 +38,27 @@ class Habit(TimestampMixin, Model):
 
     def __repr__(self):
         return f"<Habit id-{self.id}>"
+
+
+class Tracking(Model):
+    """Модель для отслеживания привычек."""
+
+    __tablename__ = "trackings"
+    __table_args__ = (
+        CheckConstraint("remind_count >= 0", name="cnt_positive_remind_count"),
+    )
+
+    remind_count: Mapped[int] = mapped_column(
+        default=21, comment="Количество напоминаний"
+    )
+    remind_time: Mapped[time] = mapped_column(comment="Время напоминания")
+    chat_id: Mapped[int] = mapped_column(comment="ID чата")
+    job_id: Mapped[str] = mapped_column(comment="ID запланированной задачи")
+
+    habit_id: Mapped[int] = mapped_column(
+        ForeignKey("habits.id", ondelete="CASCADE"), comment="ID привычки"
+    )
+    habit: Mapped["Habit"] = relationship(back_populates="trackings")
+
+    def __repr__(self):
+        return f"<Tracking id-{self.id}>"
