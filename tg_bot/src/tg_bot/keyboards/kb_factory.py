@@ -1,25 +1,105 @@
 """Модуль генерации keyboards."""
 
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telebot.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+)
 
 
-def get_start_kb(text: str, callback_data: str) -> InlineKeyboardMarkup:
+def kb_start() -> ReplyKeyboardMarkup:
     """Получаем стартовую клавиатуру."""
-    markup = InlineKeyboardMarkup(row_width=1)
-    button = InlineKeyboardButton(text=text, callback_data=callback_data)
-    markup.add(button)
-    return markup
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(KeyboardButton(text="/start"))
+    return keyboard
 
 
-kb_personal_account = get_start_kb(
-    text="Личный кабинет",
-    callback_data="cb_personal_account",
-)
-kb_login = get_start_kb(
-    text="Войти",
-    callback_data="cb_login",
-)
-kb_register = get_start_kb(
-    text="Зарегистрироваться",
-    callback_data="cb_register",
-)
+def kb_login() -> InlineKeyboardMarkup:
+    """Получаем login клавиатуру."""
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(InlineKeyboardButton(text="Войти", callback_data="cb_login"))
+    return keyboard
+
+
+def kb_register() -> InlineKeyboardMarkup:
+    """Получаем register клавиатуру."""
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Зарегистрироваться",
+            callback_data="cb_register",
+        )
+    )
+    return keyboard
+
+
+def kb_login_or_register() -> InlineKeyboardMarkup:
+    """Получаем login or register клавиатуру."""
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Войти",
+            callback_data="cb_login",
+        ),
+        InlineKeyboardButton(
+            text="Зарегистрироваться",
+            callback_data="cb_register",
+        ),
+    )
+    return keyboard
+
+
+def kb_profile() -> InlineKeyboardMarkup:
+    """Клавиатура профиля пользователя."""
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton(
+            text="📄 Список всех привычек",
+            callback_data="cb_get_all_habits",
+        ),
+        InlineKeyboardButton(
+            text="➕ Добавить привычку",
+            callback_data="cb_add_habit",
+        ),
+    )
+    return keyboard
+
+
+def kb_habits_list(habits: list[dict]):
+    """Клавиатура списка привычек."""
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    for habit in habits:
+        keyboard.add(
+            InlineKeyboardButton(
+                text=f"🔹{habit.get('name')}",
+                callback_data=f"habits:view:{habit.get('id')}",
+            ),
+            InlineKeyboardButton(
+                text="⚙ Изменить",
+                callback_data=f"habits:edit:{habit.get('id')}",
+            ),
+        )
+    return keyboard
+
+
+def kb_habit_add_or_cancel():
+    """Клавиатура подтверждения добавления привычки или отмены."""
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        InlineKeyboardButton(text="✅ OK", callback_data="cb_confirm_add_habit"),
+        InlineKeyboardButton(text="❌ Отменить", callback_data="cb_cancel_add_habit"),
+    )
+    return keyboard
+
+
+def kb_confirm_habit_completed(habit_name):
+    """Клавиатура подтверждения добавления привычки или отмены."""
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(
+        InlineKeyboardButton(
+            text="✅ Подтвердить выполнение",
+            callback_data=f"cb_confirm_habit_done:{habit_name}",
+        ),
+    )
+    return keyboard

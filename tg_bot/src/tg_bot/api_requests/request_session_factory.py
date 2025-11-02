@@ -3,11 +3,10 @@
 from requests import Session
 
 
-def get_request_session(token: str | int) -> Session:
-    """Получаем сессию запроса с заголовком Authorization, содержащим jwt-токен."""
-    if isinstance(token, int):
-        token = str(token)
+class RequestSession(Session):
+    """Класс сессии requests с заголовком Authorization, содержащим jwt-токен."""
 
-    session = Session()
-    session.headers.update({"Authorization": f"Bearer {token}"})
-    return session
+    def __init__(self, token: str):
+        super().__init__()
+        self.token = token
+        self.headers.update({"Authorization": f"Bearer {self.token}"})
