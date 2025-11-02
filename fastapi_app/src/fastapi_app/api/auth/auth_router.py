@@ -9,8 +9,8 @@ from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from models.app_models import User
 from pydantic import ValidationError
-from schemas.auth_schema import Token
-from schemas.user_schema import UserInSchema
+from schemas.auth_schema import TokenDto
+from schemas.user_schema import UserAddDto
 from services.user_service import add_user_to_db, fetch_user_by_telegram_id
 
 from api.auth.password_handler import verify_password
@@ -19,17 +19,17 @@ from api.auth.token_handler import create_access_token
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/login/", response_model=Token)
+@router.post("/login/", response_model=TokenDto)
 async def login(
     session: CommonAsyncSession,
     form_data: OAuth2PasswordRequestForm = Depends(),
-) -> Token:
+) -> TokenDto:
     """Представление аутентификации пользователя.
 
     Представляет собой реализацию входа пользователя в систему.
 
-    form_data принимает 'username' и 'password' переданные в body
-    в виде 'application/x-www-form-urlencoded'
+    Принимает 'username' и 'password', переданные в body
+    в виде 'application/x-www-form-urlencoded',
     и выдает jwt-токен для последующей аутентификации.
 
     OAuth2PasswordRequestForm требует обязательного указания 'username' и 'password'.
@@ -46,7 +46,7 @@ async def login(
         session=session, telegram_id=int(telegram_id)
     )
     if not user:
-        logger.error("Пользователь не найден.")
+        logger.error("Пользователь c id={} не найден.", telegram_id)
         raise HTTPException(404, "Пользователь не зарегистрирован.")
 
     is_valid_password = await verify_password(
@@ -58,12 +58,12 @@ async def login(
 
     data = {"sub": str(user.telegram_id)}
     jwt_token = create_access_token(data=data)
-    access_token = Token(access_token=jwt_token, token_type="Bearer")
+    access_token = TokenDto(access_token=jwt_token, token_type="Bearer")
     return access_token
 
 
-@router.post("/register/", status_code=200, response_model=Token)
-async def register_user(user: UserInSchema, session: CommonAsyncSession) -> Token:
+@router.post("/register/", status_code=200, response_model=TokenDto)
+async def register_user(user: UserAddDto, session: CommonAsyncSession) -> TokenDto:
     """Представление регистрации пользователя."""
     user_orm = await fetch_user_by_telegram_id(
         session=session, telegram_id=user.telegram_id
@@ -83,5 +83,5 @@ async def register_user(user: UserInSchema, session: CommonAsyncSession) -> Toke
 
     data = {"sub": str(user_from_db.telegram_id)}
     jwt_token = create_access_token(data=data)
-    access_token = Token(access_token=jwt_token, token_type="Bearer")
+    access_token = TokenDto(access_token=jwt_token, token_type="Bearer")
     return access_token
