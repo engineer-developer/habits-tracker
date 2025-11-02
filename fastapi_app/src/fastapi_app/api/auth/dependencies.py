@@ -2,14 +2,14 @@
 
 from typing import Annotated, Optional
 
+from core.database import CommonAsyncSession
+from core.loguru_config import logger
 from fastapi import Depends, HTTPException
+from models.app_models import User
+from services.user_service import fetch_user_by_telegram_id
 from starlette import status
 
 from api.auth.token_handler import verify_access_token
-from core.database import CommonAsyncSession
-from core.loguru_config import logger
-from models.app_models import User
-from services.user_service import fetch_user_by_telegram_id
 
 
 async def get_current_user(
@@ -48,10 +48,11 @@ async def get_current_active_user(
     :return: User - активный пользователь.
     :rtype: User.
     """
-
     if not current_user.is_active:
         logger.error("Пользователь не активен.")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Пользователь не активен."
         )
     return current_user
+
+GetCurrentActiveUser = Annotated[User, Depends(get_current_active_user)]
