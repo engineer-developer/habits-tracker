@@ -19,7 +19,10 @@ from sqlalchemy.ext.asyncio import (
 settings = get_settings()
 
 # Создаем асинхронный движок
-async_engine: AsyncEngine = create_async_engine(url=settings.db_url.unicode_string())
+async_engine: AsyncEngine = create_async_engine(
+    url=settings.db_url.unicode_string(),
+    echo=True,
+)
 async_engine.execution_options(isolation_level="SERIALIZABLE")
 
 # Создаем фабрику асинхронных сессий
