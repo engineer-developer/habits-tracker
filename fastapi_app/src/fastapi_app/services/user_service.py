@@ -2,6 +2,8 @@
 
 from typing import Optional, Sequence
 
+from sqlalchemy.orm import selectinload
+
 from api.auth.password_handler import get_password_hash
 from core.loguru_config import logger
 from models.app_models import User
@@ -36,7 +38,11 @@ async def fetch_user_by_telegram_id(
     telegram_id: int,
 ) -> Optional[User]:
     """Получаем пользователя из БД по telegram_id."""
-    stmt = select(User).where(User.telegram_id == telegram_id)
+    stmt = (
+        select(User)
+        .where(User.telegram_id == telegram_id)
+        .options(selectinload(User.habits))
+    )
     result = await session.execute(stmt)
     user = result.scalar_one_or_none()
     if user:
