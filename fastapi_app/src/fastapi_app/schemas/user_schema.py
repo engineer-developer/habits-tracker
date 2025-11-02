@@ -1,51 +1,49 @@
-"""Модуль схемы валидации и сериализации пользователя."""
+"""Модуль схем валидации и сериализации пользователя."""
 
-import enum
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class UserBaseSchema(BaseModel):
+class UserBaseDto(BaseModel):
     """Базовая схема пользователя."""
 
-    telegram_id: int = Field(gt=0)
+    telegram_id: int = Field(gt=0, description="Telegram ID пользователя")
 
 
-class UserExtendSchema(UserBaseSchema):
+class UserExtendDto(UserBaseDto):
     """Расширенная схема пользователя."""
 
-    first_name: str
-    last_name: Optional[str] = None
-    username: Optional[str] = None
+    first_name: str = Field(description="Имя пользователя")
+    last_name: Optional[str] = Field(default=None, description="Фамилия пользователя")
+    username: Optional[str] = Field(default=None, description="Username пользователя")
 
 
-class UserCredentials(UserBaseSchema):
+class UserCredentialsDto(UserBaseDto):
     """Схема аутентификации пользователя."""
 
-    password: str
+    password: str = Field(description="Пароль")
 
 
-class UserInSchema(UserExtendSchema):
+class UserAddDto(UserExtendDto):
     """Схема добавления пользователя."""
 
-    password: str
+    password: str = Field(description="Пароль")
 
 
-class UserOutSchema(UserExtendSchema):
+class UserOutDto(UserExtendDto):
     """Схема вывода информации о пользователе."""
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
+    id: int = Field(description="ID")
+    is_active: bool = Field(description="Пользователь активен")
+    created_at: datetime = Field(description="Время создания")
+    updated_at: datetime = Field(description="Время обновления")
 
 
-class UsersListSchema(BaseModel):
+class UsersListDto(BaseModel):
     """Схема для списка пользователей."""
 
-    users: list[UserOutSchema]
-
+    users: list[UserOutDto] = Field(description="Список пользователей")
