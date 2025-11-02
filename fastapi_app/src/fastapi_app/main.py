@@ -1,4 +1,4 @@
-"""Модуль загрузки сервиса Fastapi."""
+"""Модуль загрузки приложения."""
 
 from asyncio import get_running_loop
 from contextlib import asynccontextmanager
@@ -10,24 +10,28 @@ from api.api_router import router as api_router
 from fastapi import FastAPI
 
 
-@asynccontextmanager
-async def lifespan(
-    app: FastAPI,
-) -> AsyncIterator[None]:
-    """Настройка параметров приложения.
+def create_app() -> FastAPI:
+    """Создаем приложение Fastapi."""
 
-    :param app: Экземпляр класса Fastapi.
-    :return: Асинхронный итератор.
-    """
-    # Применение миграций alembic
-    loop = get_running_loop()
-    loop.run_in_executor(None, upgrade_to_head)
-    yield
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        """Настройка параметров приложения.
+
+        :param app: Экземпляр класса Fastapi.
+        :return: Асинхронный итератор.
+        """
+        # Применение миграций alembic
+        loop = get_running_loop()
+        loop.run_in_executor(None, upgrade_to_head)
+        yield
+
+    app = FastAPI(lifespan=lifespan)
+    app.include_router(api_router)
+
+    return app
 
 
-app = FastAPI(lifespan=lifespan)
-app.include_router(api_router)
-
+app = create_app()
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)
