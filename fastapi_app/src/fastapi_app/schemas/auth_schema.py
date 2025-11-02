@@ -1,10 +1,10 @@
 """Модуль схем аутентификации."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
-class Token(BaseModel):
+class TokenDto(BaseModel):
     """Схема токена."""
 
-    access_token: str
-    token_type: str
+    access_token: str = Field(description="Токен аутентификации")
+    token_type: str = Field(description="Тип токена аутентификации")
