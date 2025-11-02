@@ -39,6 +39,9 @@ class Model(Base):
     __abstract__ = True
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
 
 class TimestampMixin:
     """Миксин для дополнения модели временем создания и обновления."""
