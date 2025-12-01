@@ -1,6 +1,6 @@
 """Модуль обслуживания привычек."""
 
-from typing import Sequence
+from typing import Sequence, Optional
 
 from core.loguru_config import logger
 from fastapi import HTTPException
@@ -39,7 +39,7 @@ async def fetch_habit_by_id(id: int, session: AsyncSession) -> Habit:
 
 async def fetch_habit_by_name_and_user_id(
     name: str, user_id: int, session: AsyncSession
-) -> Habit:
+) -> Optional[Habit]:
     """Извлечение привычки из базы данных по name и user_id."""
     stmt = (
         select(Habit)
@@ -51,8 +51,11 @@ async def fetch_habit_by_name_and_user_id(
         )
     )
     habit = await session.scalar(stmt)
-    logger.debug("Получена привычка: {}", habit)
-    return habit
+    if habit:
+        logger.debug("Получена привычка: {}", habit)
+        return habit
+    else:
+        return None
 
 
 async def fetch_habit_by_name_and_job_id(
@@ -91,7 +94,7 @@ async def delete_habit_by_name_and_user_id(
 
 
 async def fetch_all_habit_by_user_id(
-    user_id: int, session: AsyncSession
+    user_id: int, session: AsyncSession,
 ) -> Sequence[Habit]:
     """Извлечение всех привычек пользователя."""
     stmt = (
@@ -103,7 +106,11 @@ async def fetch_all_habit_by_user_id(
             selectinload(Habit.tracking),
         )
     )
+    if is_not_completed==True:
+        stmt = stm
     res = await session.scalars(stmt)
     habits = res.all()
     logger.debug("Получены привычки: {}", habits)
     return habits
+
+

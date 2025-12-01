@@ -39,7 +39,7 @@ class Habit(TimestampMixin, Model):
 
     name: Mapped[str] = mapped_column(String(100))
     description: Mapped[str] = mapped_column(default="", server_default="")
-    is_active: Mapped[bool] = mapped_column(default=True, server_default=text("true"))
+    completed: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     user: Mapped["User"] = relationship(back_populates="habits")

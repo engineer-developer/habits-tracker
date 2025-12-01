@@ -5,8 +5,8 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
-class TrackingCreateDto(BaseModel):
-    """Схема создания отслеживания привычки."""
+class TrackingBaseDto(BaseModel):
+    """Схема отслеживания привычки."""
 
     alert_time: datetime
     habit_id: int

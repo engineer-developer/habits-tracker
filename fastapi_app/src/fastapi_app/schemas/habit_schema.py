@@ -50,7 +50,7 @@ class HabitOutDto(BaseModel):
     id: int
     name: str
     description: str
-    is_active: bool
+    completed: bool
     reminder: ReminderOutDto
     tracking: list[TrackingOutDto]
 

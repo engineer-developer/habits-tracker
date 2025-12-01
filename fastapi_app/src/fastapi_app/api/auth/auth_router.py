@@ -69,7 +69,9 @@ async def register_user(user: UserAddDto, session: CommonAsyncSession) -> TokenD
         session=session, telegram_id=user.telegram_id
     )
     if user_orm:
-        raise HTTPException(403, "Такой пользователь уже зарегистрирован.")
+        error_message = "Такой пользователь уже зарегистрирован."
+        logger.error(error_message)
+        raise HTTPException(status_code=409, detail=error_message)
 
     try:
         user_orm = User(**user.model_dump())
@@ -79,7 +81,9 @@ async def register_user(user: UserAddDto, session: CommonAsyncSession) -> TokenD
 
     user_from_db: Optional[User] = await add_user_to_db(session=session, user=user_orm)
     if not user_from_db:
-        raise HTTPException(status_code=400, detail="Ошибка добавления пользователя.")
+        error_message = "Ошибка добавления пользователя."
+        logger.error(error_message)
+        raise HTTPException(status_code=400, detail=error_message)
 
     data = {"sub": str(user_from_db.telegram_id)}
     jwt_token = create_access_token(data=data)
