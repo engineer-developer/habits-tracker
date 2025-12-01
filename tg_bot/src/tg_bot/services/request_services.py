@@ -1,29 +1,46 @@
 """Модуль взаимодействия с backend API."""
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
 
 import loguru
-from requests import Session
+import requests
+from requests import Response
 from requests.exceptions import RequestException
 
 from tg_bot.core.config import settings
 from tg_bot.schemas.habit_schema import HabitAddDto
 from tg_bot.services.logging_services import logger
-from tg_bot.services.redis_services import RedisService, redis_service
+
+
+class SessionStrategy(ABC):
+    """Абстрактная стратегия создания сессии."""
+
+    @abstractmethod
+    def create_session(self) -> requests.Session:
+        pass
+
+
+class NoAuthSessionStrategy(SessionStrategy):
+    """Стратегия создания обычной request сессии."""
+
+    def create_session(self) -> requests.Session:
+        """Создание сессии."""
+        return requests.Session()
 
 
 @dataclass
-class RequestSession(Session):
-    """Класс requests сессии, с возможностью добавлению jwt-токена в заголовок."""
+class TokenAuthSessionStrategy(SessionStrategy):
+    """Стратегия создания сессии, с jwt токеном в заголовке."""
 
-    token: Optional[str] = None
+    token: str
 
-    def __post_init__(self) -> None:
-        """Логика инициализации."""
-        super().__init__()
-        if self.token:
-            self.headers.update({"Authorization": f"Bearer {self.token}"})
+    def create_session(self) -> requests.Session:
+        """Создание сессии."""
+        session = requests.Session()
+        session.headers.update({"Authorization": f"Bearer {self.token}"})
+        return session
 
 
 @dataclass
@@ -32,19 +49,40 @@ class RequestService:
 
     api_url: str
     logger: loguru.logger
-    redis_service: RedisService
-    _requests_session: Optional[RequestSession] = None
+    _session_strategy: Optional[SessionStrategy] = None
+    _requests_session: Optional[requests.Session] = None
 
     def __post_init__(self):
         """Логика инициализации."""
-        self._requests_session = RequestSession()
+        self._session_strategy = NoAuthSessionStrategy()
+        self._requests_session = self._session_strategy.create_session()
 
-    def set_token_to_session(self, token: str = None) -> None:
-        """Добавляем auth токен в заголовок requests сессии."""
-        if token:
-            self._requests_session = RequestSession(token=token)
-        else:
-            self._requests_session = RequestSession()
+    @property
+    def strategy(self) -> SessionStrategy:
+        """Отображаем _session_strategy."""
+        return self._session_strategy
+
+    @strategy.setter
+    def strategy(self, new_strategy: SessionStrategy) -> None:
+        """Устанавливаем _session_strategy."""
+        self._session_strategy = new_strategy
+        self._requests_session.close()
+        self._requests_session = self._session_strategy.create_session()
+
+    def close_session(self) -> None:
+        """Закрываем сессию."""
+        self._requests_session.close()
+
+    def get_user_profile(self) -> Response | None:
+        """Получаем доступ к личному кабинету пользователя."""
+        url = self.api_url + "users/profile/"
+
+        with self._requests_session as req:
+            try:
+                response = req.get(url)
+                return response
+            except RequestException as exc:
+                self.logger.error(exc)
 
     def upload_new_habit_data(self, data: HabitAddDto) -> bool:
         """Отправка данных новой привычки."""
@@ -52,8 +90,8 @@ class RequestService:
 
         with self._requests_session as req:
             try:
-                resp = req.post(url, json=data.model_dump(mode="json"))
-                resp.raise_for_status()
+                response = req.post(url, json=data.model_dump(mode="json"))
+                response.raise_for_status()
                 self.logger.debug("Данные привычки успешно отправлены.")
                 return True
             except RequestException as exc:
@@ -66,11 +104,12 @@ class RequestService:
 
         with self._requests_session as req:
             try:
-                resp = req.get(url)
-                resp.raise_for_status()
-                response_data = resp.json()
+                response = req.get(url)
+                response.raise_for_status()
+                response_data = response.json()
                 self.logger.debug(
-                    "Данные о всех привычках пользователя получены: {}", response_data
+                    "Данные о всех привычках пользователя получены: {}",
+                    response_data,
                 )
                 return response_data
             except RequestException as exc:
@@ -80,8 +119,6 @@ class RequestService:
     def get_habit_info(self, name: str, job_id: str) -> bool | dict:
         """Получаем данные привычки из бэкэнда."""
         url = self.api_url + f"habits/{name}/reminders/{job_id}/"
-
-        self.set_token_to_session(token=None)
 
         with self._requests_session as req:
             try:
@@ -94,9 +131,25 @@ class RequestService:
                 self.logger.error("Данные о привычке не получены: {}", exc)
                 return False
 
+    def upload_habit_confirm_data(self, data: dict) -> bool:
+        """Отправляем данные о выполнении привычки."""
+        url = self.api_url + "habits/confirm_completed/"
 
-requests_service = RequestService(
-    api_url=settings.api_url,
-    logger=logger,
-    redis_service=redis_service,
-)
+        with self._requests_session as req:
+            try:
+                response = req.post(url=url, json=data)
+                response.raise_for_status()
+                self.logger.debug("Данные о выполнении привычки отправлены.")
+                return True
+            except RequestException as exc:
+                self.logger.error(
+                    "Данные о выполнении привычки не отправлены: {}",
+                    exc,
+                )
+                return False
+            except TypeError as exc:
+                self.logger.error("{}", exc)
+                return False
+
+
+requests_service = RequestService(api_url=settings.api_url, logger=logger)

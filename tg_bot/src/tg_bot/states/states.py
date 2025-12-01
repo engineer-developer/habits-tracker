@@ -13,8 +13,8 @@ class AuthStates(StatesGroup):
     wait_password_for_login = State()
 
 
-class HabitStates(StatesGroup):
-    """Habit states."""
+class HabitAddStates(StatesGroup):
+    """Состояния добавления привычки."""
 
     wait_for_habit_name = State()
     wait_for_habit_description = State()
@@ -22,8 +22,4 @@ class HabitStates(StatesGroup):
     wait_for_habit_remind_quantity = State()
 
 
-redis_storage = StateRedisStorage(
-    host=settings.redis_host,
-    port=settings.redis_port,
-    db=settings.redis_db,
-)
+

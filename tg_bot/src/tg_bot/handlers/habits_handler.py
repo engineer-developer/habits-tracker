@@ -10,14 +10,14 @@ from telebot.types import CallbackQuery, Message
 from tg_bot.core.config import Settings
 from tg_bot.keyboards import kb_factory
 from tg_bot.keyboards.kb_factory import kb_habit_add_or_cancel, kb_habits_list
-from tg_bot.schemas.habit_schema import HabitData
+from tg_bot.schemas.habit_schema import HabitDataDto
 from tg_bot.services.logging_services import logger
-from tg_bot.services.message_services import bot_message_service, send_notice
-from tg_bot.services.notify_services import HabitNotifyService
+from tg_bot.services.message_services import send_notice
+from tg_bot.services.notify_services import HabitNotifyService, habit_notify_service
 from tg_bot.services.redis_services import redis_service
-from tg_bot.services.request_services import requests_service
+from tg_bot.services.request_services import requests_service, TokenAuthSessionStrategy
 from tg_bot.services.scheduler_services import scheduler_service
-from tg_bot.states.states import HabitStates
+from tg_bot.states.states import HabitAddStates
 
 
 def register_handlers(bot: TeleBot, settings: Settings) -> None:
@@ -29,7 +29,7 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
     def get_all_habits(callback: CallbackQuery) -> None:
         """Обработчик callback для получения всех привычек пользователя."""
         token = redis_service.load_user_data(user_id=callback.from_user.id, key="token")
-        requests_service.set_token_to_session(token=token)
+        requests_service.strategy = TokenAuthSessionStrategy(token=token)
         habits_info: list[dict] = requests_service.get_all_habits_info()
         if habits_info:
             bot.send_message(
@@ -38,17 +38,22 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
                 reply_markup=kb_habits_list(habits_info),
             )
 
-    @bot.callback_query_handler(func=lambda callback: callback.data == "cb_add_habit")
+    @bot.callback_query_handler(func=lambda callback: callback.data == "menu_add_habit")
     def add_habit(callback: CallbackQuery) -> None:
         """Обработчик callback добавления привычки."""
+
         msg = bot.send_message(
             chat_id=callback.message.chat.id,
             text="Отправьте название привычки.",
         )
         bot.set_state(
             user_id=callback.from_user.id,
-            state=HabitStates.wait_for_habit_name,
+            state=HabitAddStates.wait_for_habit_name,
             chat_id=callback.message.chat.id,
+        )
+        bot.delete_message(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
         )
         bot.register_next_step_handler(msg, get_habit_name)
         bot.answer_callback_query(callback.id)
@@ -67,6 +72,7 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
             chat_id=message.chat.id,
             text="Добавьте описание привычки.",
         )
+
         bot.register_next_step_handler(msg, get_habit_description)
 
     def get_habit_description(message: Message) -> None:
@@ -175,25 +181,30 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
         habit_info["chat_id"] = callback.message.chat.id
 
         try:
-            habit_data = HabitData(**habit_info)
+            habit_data = HabitDataDto(**habit_info)
         except ValidationError as exc:
             logger.error(exc.errors())
             return False
 
-        habit_notify_service = HabitNotifyService(
-            logger=logger,
-            redis_service=redis_service,
-            requests_service=requests_service,
-            scheduler_service=scheduler_service,
+        success = habit_notify_service.process_notify(
+            func=send_notice,
+            data=habit_data,
         )
-        success = habit_notify_service.process_notify(func=send_notice, data=habit_data)
         if not success:
             logger.error("Не удалось обработать данные.")
+            bot.answer_callback_query(
+                callback_query_id=callback.id,
+                text="Возможно такая привычка уже есть.",
+            )
             return False
 
         bot.delete_state(
             user_id=callback.from_user.id,
             chat_id=callback.message.chat.id,
+        )
+        bot.delete_message(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
         )
         logger.debug("Привычка добавлена.")
         bot.answer_callback_query(callback.id, "Привычка добавлена.")
@@ -213,17 +224,36 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
         logger.debug("Добавление привычки отменено.")
         bot.answer_callback_query(callback.id, "Добавление отменено")
 
-    @bot.callback_query_handler(func=lambda cb: cb.data == "cb_confirm_habit_completed")
+    @bot.callback_query_handler(
+        func=lambda cb: cb.data.startswith("cb_confirm_habit_done")
+    )
     def process_confirm_habit_completed(callback: CallbackQuery) -> None:
         """Подтверждение выполнения привычки."""
-        data = callback.json()
-        logger.debug("after press button: {}, {}", data, type(data))
+        habit_name = callback.data.split(":")[1]
 
         confirm_datetime = datetime.datetime.now(tz=datetime.UTC)
-        msg_text = f"Думаем над подтверждением, которое поступило: {confirm_datetime}"
+        confirm_data = {
+            "name": habit_name,
+            "alert_time": confirm_datetime.isoformat(),
+        }
+        token = redis_service.load_user_data(callback.from_user.id, "token")
+        requests_service.strategy = TokenAuthSessionStrategy(token=token)
 
+        success = requests_service.upload_habit_confirm_data(data=confirm_data)
+
+        bot.delete_message(
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.id,
+        )
+        if not success:
+            bot.answer_callback_query(
+                callback.id,
+                text="Не удалось зафиксировать выполнение привычки.",
+            )
+            return
+        bot.answer_callback_query(callback.id)
+        msg_text = f"Выполнение привычки '{habit_name}' зафиксировано 👍"
         bot.send_message(
             chat_id=callback.message.chat.id,
-            text=msg_text,  # TODO: решить как получить название привычки?
+            text=msg_text,
         )
-        bot.answer_callback_query(callback.id, text="Осталось ???")

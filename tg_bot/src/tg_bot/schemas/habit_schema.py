@@ -1,23 +1,29 @@
-from pydantic import BaseModel, Field
+"""Модуль схем для валидации и сериализации данных о привычке."""
+
 import datetime
 
-class HabitAddDto(BaseModel):
-    """Схема для создания привычки."""
+from pydantic import BaseModel, Field
+
+
+class HabitBaseDto(BaseModel):
+    """Базовая схема привычки."""
 
     name: str = Field(max_length=100)
     description: str
+
+
+class HabitAddDto(HabitBaseDto):
+    """Схема для создания привычки."""
+
     remind_time: datetime.time
     remind_quantity: int = Field(gt=0)
     job_id: str
 
 
-class HabitJobDataDto(HabitAddDto):
-    """Схема для создания задания о напоминании."""
+class HabitDataDto(HabitAddDto):
+    """Схема данных о привычке."""
 
     user_id: int
     chat_id: int
 
 
-class HabitData(HabitJobDataDto):
-    """Данные о привычке."""
-    pass

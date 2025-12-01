@@ -7,12 +7,12 @@ from requests.status_codes import codes
 from telebot import TeleBot
 from telebot.types import CallbackQuery, Message
 
-from tg_bot.api_requests.request_session_factory import RequestSession
 from tg_bot.core.config import Settings
 from tg_bot.keyboards import kb_factory
 from tg_bot.schemas.user_schema import UserLoginSchema, UserRegisterSchema
 from tg_bot.services.logging_services import logger
 from tg_bot.services.redis_services import redis_service
+from tg_bot.services.request_services import requests_service, TokenAuthSessionStrategy
 from tg_bot.states.states import AuthStates
 
 
@@ -39,42 +39,41 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
             )
             return
 
-        request_session = RequestSession(token=token)
-        url = settings.api_url + "users/profile/"
-        try:
-            response = request_session.get(url)
+        requests_service.strategy = TokenAuthSessionStrategy(token=token)
+        response = requests_service.get_user_profile()
+        logger.debug("response: {}", response)
+        if response is None:
+            logger.error("Нет ответа от бэкэнда")
+            return
 
-            if response.status_code == codes.OK:
-                logger.debug("Пользователь вошел в профиль.")
-                bot.send_message(
-                    chat_id=message.chat.id,
-                    text="🏠 Добро пожаловать в личный кабинет",
-                    reply_markup=kb_factory.kb_profile(),
-                )
-            elif response.status_code == codes.UNAUTHORIZED:
-                logger.debug("Пользователь не аутентифицирован.")
-                bot.reply_to(
-                    message,
-                    f"Приветствую {message.from_user.first_name}.\n\n"
-                    f"Вы не аутентифицированы.\n\nПожалуйста войдите в систему "
-                    f"или зарегистрируйтесь.",
-                    reply_markup=kb_factory.kb_login_or_register(),
-                )
-            elif (
-                response.status_code == codes.NOT_FOUND
-                and response.json().get("detail") == "Пользователь не найден."
-            ):
-                bot.send_message(
-                    chat_id=message.chat.id,
-                    text="Вы не зарегистрированы.",
-                    reply_markup=kb_factory.kb_register(),
-                )
-            else:
-                logger.error("Ошибка: {}: {}", response.status_code, response.text)
-                bot.reply_to(message, "Не удалось получить сведения.")
-
-        except ConnectTimeout as exc:
-            logger.error("Ошибка соединения: {}", exc)
+        if response.status_code == codes.OK:
+            logger.debug("Пользователь вошел в профиль.")
+            bot.send_message(
+                chat_id=message.chat.id,
+                text="🏠 Добро пожаловать в личный кабинет",
+                reply_markup=kb_factory.kb_profile(),
+            )
+        elif response.status_code == codes.UNAUTHORIZED:
+            logger.debug("Пользователь не аутентифицирован.")
+            bot.reply_to(
+                message,
+                f"Приветствую {message.from_user.first_name}.\n\n"
+                f"Вы не аутентифицированы.\n\nПожалуйста войдите в систему "
+                f"или зарегистрируйтесь.",
+                reply_markup=kb_factory.kb_login_or_register(),
+            )
+        elif (
+            response.status_code == codes.NOT_FOUND
+            and response.json().get("detail") == "Пользователь не найден."
+        ):
+            bot.send_message(
+                chat_id=message.chat.id,
+                text="Вы не зарегистрированы.",
+                reply_markup=kb_factory.kb_register(),
+            )
+        else:
+            logger.error("Ошибка: {}: {}", response.status_code, response.text)
+            bot.reply_to(message, "Не удалось получить сведения.")
 
     @bot.callback_query_handler(func=lambda callback: callback.data == "cb_login")
     def process_login(callback: CallbackQuery) -> None:
@@ -190,10 +189,16 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
 
                 bot.send_message(
                     chat_id=message.chat.id,
-                    text="🏠 Добро пожаловать в личный кабинет",
+                    text="🏠 Личный кабинет",
                     reply_markup=kb_factory.kb_profile(),
                 )
                 logger.debug("Пользователь вошел в систему.")
+            elif response.status_code == codes.CONFLICT:
+                bot.send_message(
+                    chat_id=message.chat.id,
+                    text="Пользователь уже зарегистрирован. Войдите в систему.",
+                    reply_markup=kb_factory.kb_login(),
+                )
             else:
                 bot.send_message(chat_id=message.chat.id, text="Ошибка регистрации.")
 

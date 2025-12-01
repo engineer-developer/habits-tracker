@@ -5,13 +5,12 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 
 import loguru
-from apscheduler.job import Job
 from apscheduler.jobstores.base import BaseJobStore
 from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from tg_bot.schemas.habit_schema import HabitJobDataDto
+from tg_bot.schemas.habit_schema import HabitDataDto
 from tg_bot.services.logging_services import logger
 
 
@@ -19,7 +18,7 @@ from tg_bot.services.logging_services import logger
 class SchedulerBuilder(BackgroundScheduler):
     """Класс планировщика."""
 
-    job_store: BaseJobStore = RedisJobStore(db=0)
+    job_store: BaseJobStore
     jobstores: Optional[dict] = None
     timezone: Optional[datetime.tzinfo] = None
 
@@ -27,10 +26,7 @@ class SchedulerBuilder(BackgroundScheduler):
         """Логика инициализации и запуск планировщика."""
         self.jobstores = {"default": self.job_store}
         self.timezone = datetime.UTC
-        super().__init__(
-            jobstores=self.jobstores,
-            timezone=self.timezone,
-        )
+        super().__init__(jobstores=self.jobstores, timezone=self.timezone)
 
 
 @dataclass
@@ -39,9 +35,8 @@ class SchedulerService:
 
     scheduler: SchedulerBuilder
     logger: loguru.logger
-    jobs: Optional[list[Job]] = None
 
-    def create_new_job(self, func: Callable, job_data: HabitJobDataDto) -> bool:
+    def create_new_job(self, func: Callable, job_data: HabitDataDto) -> bool:
         """Создаем новую задачу и добавляем в scheduler."""
         remind_time = job_data.remind_time
         name = job_data.name
@@ -69,8 +64,6 @@ class SchedulerService:
             return False
 
 
-scheduler = SchedulerBuilder()
-scheduler_service = SchedulerService(
-    scheduler=scheduler,
-    logger=logger,
-)
+redis_job_store = RedisJobStore(db=0)
+scheduler = SchedulerBuilder(job_store=redis_job_store)
+scheduler_service = SchedulerService(scheduler=scheduler, logger=logger)

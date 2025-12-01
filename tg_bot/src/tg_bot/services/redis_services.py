@@ -1,12 +1,15 @@
+"""Модуль инициализации сервиса взаимодействия с Redis."""
+
+import datetime
 import json
 from dataclasses import dataclass
 from typing import Optional
 
-import loguru
 import redis
 
 from tg_bot.core.config import settings
-from tg_bot.services.logging_services import logger
+
+TOKEN_EXPIRED_TIME = datetime.timedelta(minutes=30)
 
 
 @dataclass
@@ -14,7 +17,6 @@ class RedisService:
     """Сервис взаимодействия с redis."""
 
     url: str
-    logger: loguru.logger
     redis_client: Optional[redis.Redis] = None
 
     def __post_init__(self) -> None:
@@ -25,7 +27,6 @@ class RedisService:
     def save_user_data(self, user_id: int, key: str, value: str) -> None:
         """Сохранение данных в Redis."""
         self.redis_client.hset(f"user:{user_id}", key, json.dumps(value))
-
 
     def load_user_data(self, user_id: int, key: str):
         """Загрузка данных из Redis."""
@@ -41,7 +42,4 @@ class RedisService:
             return False
 
 
-redis_service = RedisService(
-    url=settings.redis_url,
-    logger=logger,
-)
+redis_service = RedisService(url=settings.redis_url)

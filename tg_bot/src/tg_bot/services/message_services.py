@@ -8,10 +8,10 @@ from telebot import TeleBot
 
 from tg_bot.core.bot_factory import bot
 from tg_bot.keyboards.kb_factory import kb_confirm_habit_completed
-from tg_bot.schemas.habit_schema import HabitJobDataDto
+from tg_bot.schemas.habit_schema import HabitDataDto
 from tg_bot.services.logging_services import logger
 from tg_bot.services.redis_services import RedisService, redis_service
-from tg_bot.services.request_services import requests_service
+from tg_bot.services.request_services import requests_service, NoAuthSessionStrategy
 from tg_bot.services.scheduler_services import scheduler_service
 
 
@@ -39,9 +39,9 @@ def calculate_left_remind_quantity(habit_info: dict) -> int | bool:
 
 
 def send_notice(**kwargs) -> bool:
-    """Отправляем напоминание о привычке."""
+    """Отправляем напоминание о привычке в чат пользователю."""
     try:
-        habit_job_data = HabitJobDataDto(**kwargs)
+        habit_job_data = HabitDataDto(**kwargs)
         logger.debug("Данные из job: {}", habit_job_data.model_dump())
     except ValidationError as exc:
         logger.error(exc.errors())
@@ -51,18 +51,13 @@ def send_notice(**kwargs) -> bool:
     habit_name = habit_job_data.name
     job_id = habit_job_data.job_id
 
+    requests_service.strategy = NoAuthSessionStrategy()
     habit_info: dict = requests_service.get_habit_info(
         job_id=job_id,
         name=habit_name,
     )
     if not habit_info:
         logger.error("Данные о привычке не получены из бэкэнда.")
-        bot.send_message(
-            chat_id=habit_job_data.chat_id,
-            text="Требуется аутентификация. Введите /start",
-
-            parse_mode="Markdown",
-        )
         return False
 
     left_remind_quantity = calculate_left_remind_quantity(habit_info)
@@ -79,9 +74,9 @@ def send_notice(**kwargs) -> bool:
             reply_markup=kb_confirm_habit_completed(habit_name=habit_name),
             parse_mode="Markdown",
         )
-        redis_service.save_user_data(user_id, "habit_name", habit_name)  # TODO: зачем?
     else:
         scheduler_service.scheduler.remove_job(job_id=job_id)
+        logger.debug("Задача c job_id={} удалена.", job_id)
     return True
 
 
