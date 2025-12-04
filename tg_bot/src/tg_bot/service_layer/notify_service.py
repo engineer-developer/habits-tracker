@@ -7,14 +7,14 @@ import loguru
 from pydantic import ValidationError
 
 from tg_bot.schemas.habit_schema import HabitAddDto, HabitDataDto
-from tg_bot.services.logging_services import logger
-from tg_bot.services.redis_services import RedisService, redis_service
-from tg_bot.services.request_services import (
+from tg_bot.service_layer.logging_service import logger
+from tg_bot.service_layer.redis_service import RedisService, redis_service
+from tg_bot.service_layer.request_service import (
     RequestService,
     TokenAuthSessionStrategy,
     requests_service,
 )
-from tg_bot.services.scheduler_services import SchedulerService, scheduler_service
+from tg_bot.service_layer.scheduler_service import SchedulerService, scheduler_service
 
 
 @dataclass
@@ -30,7 +30,7 @@ class HabitNotifyService:
         """Готовим данные для отправки на бэкэнд."""
         try:
             data = HabitAddDto(**data.model_dump())
-            self.logger.debug("Данные, подготовленные для отправки: {data}", data=data)
+            self.logger.debug("Данные, подготовленные для отправки: {}", data)
             return data
         except ValidationError as exc:
             self.logger.debug(exc.errors())
@@ -44,14 +44,14 @@ class HabitNotifyService:
         token = self.redis_service.load_user_data(user_id=data.user_id, key="token")
         self.requests_service.strategy = TokenAuthSessionStrategy(token=token)
 
-        success_upload = self.requests_service.upload_new_habit_data(
+        habit_data = self.requests_service.upload_new_habit_data(
             data=self.process_data_for_upload(data=data)
         )
-        if not success_upload:
+        if habit_data is None:
             self.logger.error("Данные на бэк не отправлены.")
             return False
 
-        success_add_job = self.scheduler_service.create_new_job(
+        success_add_job = self.scheduler_service.create_job(
             func=func,
             job_data=data,
         )

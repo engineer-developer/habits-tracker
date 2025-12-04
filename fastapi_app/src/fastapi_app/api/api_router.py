@@ -6,7 +6,6 @@ from fastapi.routing import APIRouter
 from api.auth.auth_router import router as auth_router
 from api.habits.habits_router import router as habits_router
 from api.users.user_router import router as users_router
-from api.reminders.reminder_router import router as reminders_router
 
 API_VERSION = "1.0.0"
 
@@ -16,8 +15,6 @@ router = APIRouter(prefix="/api")
 router.include_router(auth_router)
 router.include_router(users_router)
 router.include_router(habits_router)
-
-router.include_router(reminders_router)
 
 
 @router.get(

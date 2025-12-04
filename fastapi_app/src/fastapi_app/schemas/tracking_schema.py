@@ -8,8 +8,8 @@ from pydantic import BaseModel, ConfigDict
 class TrackingBaseDto(BaseModel):
     """Схема отслеживания привычки."""
 
-    alert_time: datetime
     habit_id: int
+    alert_time: datetime
 
 
 class TrackingOutDto(BaseModel):

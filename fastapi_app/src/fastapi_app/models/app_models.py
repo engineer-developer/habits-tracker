@@ -6,9 +6,7 @@ from sqlalchemy import (
     BigInteger,
     ForeignKey,
     String,
-    UniqueConstraint,
     text,
-    CheckConstraint,
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -35,37 +33,26 @@ class Habit(TimestampMixin, Model):
     """Модель привычки."""
 
     __tablename__ = "habits"
-    __table_args__ = (UniqueConstraint("name", "user_id"),)
 
-    name: Mapped[str] = mapped_column(String(100))
+    title: Mapped[str] = mapped_column(String(250))
     description: Mapped[str] = mapped_column(default="", server_default="")
+    remind_time: Mapped[time]
+    remind_quantity: Mapped[int]
     completed: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     user: Mapped["User"] = relationship(back_populates="habits")
-    reminder: Mapped["Reminder"] = relationship(back_populates="habit")
     tracking: Mapped[list["Tracking"]] = relationship(back_populates="habit")
 
 
-class Reminder(TimestampMixin, Model):
-    """Модель напоминания."""
-
-    __tablename__ = "reminders"
-
-    remind_time: Mapped[time]
-    remind_quantity: Mapped[int]
-    job_id: Mapped[str] = mapped_column(unique=True)
-    habit_id: Mapped[int] = mapped_column(ForeignKey("habits.id", ondelete="CASCADE"))
-
-    habit: Mapped["Habit"] = relationship(back_populates="reminder")
 
 
 class Tracking(TimestampMixin, Model):
-    """Модель для отслеживания выполненных привычек."""
+    """Модель для отслеживания выполнения привычек."""
 
     __tablename__ = "tracking"
 
-    alert_time: Mapped[datetime]=mapped_column(TIMESTAMP(timezone=True))
+    execution_time: Mapped[datetime]=mapped_column(TIMESTAMP(timezone=True))
     habit_id: Mapped[int] = mapped_column(ForeignKey("habits.id", ondelete="CASCADE"))
 
     habit: Mapped["Habit"] = relationship(back_populates="tracking")

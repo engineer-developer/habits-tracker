@@ -11,59 +11,67 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from tg_bot.schemas.habit_schema import HabitDataDto
-from tg_bot.services.logging_services import logger
+from tg_bot.service_layer.logging_service import logger
 
 
 @dataclass
 class SchedulerBuilder(BackgroundScheduler):
     """Класс планировщика."""
 
-    job_store: BaseJobStore
-    jobstores: Optional[dict] = None
-    timezone: Optional[datetime.tzinfo] = None
-
-    def __post_init__(self) -> None:
-        """Логика инициализации и запуск планировщика."""
+    def __init__(self, job_store: BaseJobStore):
+        """Логика инициализации планировщика."""
+        self.job_store = job_store
         self.jobstores = {"default": self.job_store}
         self.timezone = datetime.UTC
         super().__init__(jobstores=self.jobstores, timezone=self.timezone)
 
 
-@dataclass
 class SchedulerService:
     """Сервис планировщика задач."""
 
-    scheduler: SchedulerBuilder
-    logger: loguru.logger
+    def __init__(self, scheduler: SchedulerBuilder, logger: loguru.logger) -> None:
+        """Логика инициализации."""
+        self.scheduler = scheduler
+        self.logger = logger
 
-    def create_new_job(self, func: Callable, job_data: HabitDataDto) -> bool:
+    def create_job(self, func: Callable, job_data: dict) -> bool:
         """Создаем новую задачу и добавляем в scheduler."""
-        remind_time = job_data.remind_time
-        name = job_data.name
-        job_id = job_data.job_id
+        remind_time = job_data.get("remind_time")
+        title = job_data.get("title")
+        job_id = job_data.get("id")
+        job_name = f"Job_{title}_{job_id}"
+        job_trigger = CronTrigger(second="*/30")
+        # job_trigger=CronTrigger(
+        #     hour=remind_time.hour,
+        #     minute=remind_time.minute,
+        # ),
 
         job = self.scheduler.add_job(
             func=func,
-            trigger=CronTrigger(second="*/30"),
-            # trigger=CronTrigger(
-            #     hour=remind_time.hour,
-            #     minute=remind_time.minute,
-            # ),
-            kwargs=job_data.model_dump(),
+            trigger=job_trigger,
+            kwargs=job_data,
             id=job_id,
-            name=f"Job_{name}",
+            name=job_name,
             coalesce=True,
             max_instances=1,
             replace_existing=True,
         )
         if job:
-            self.logger.debug("Задача '{}' добавлена", job.id)
+            self.logger.debug("Добавлена задача {}", job.id)
             self.scheduler.print_jobs()
             return True
         else:
             return False
 
+    def edit_job(self):
+        """Метод изменения задачи."""
+        pass
+
+    def delete_job(self):
+        """Метод удаления задачи."""
+        pass
 
 redis_job_store = RedisJobStore(db=0)
 scheduler = SchedulerBuilder(job_store=redis_job_store)
+
 scheduler_service = SchedulerService(scheduler=scheduler, logger=logger)

@@ -5,254 +5,168 @@ from typing import Annotated
 from core.database import CommonAsyncSession
 from core.loguru_config import logger
 from fastapi import HTTPException
-from fastapi.params import Path
+from fastapi.params import Path, Query
 from fastapi.routing import APIRouter
-from models.app_models import Habit, Reminder, Tracking
-from schemas.habit_schema import (
-    HabitAddDto,
-    HabitCompletedDto,
-    HabitDeleteInfoDto,
-    HabitOutDto,
-    HabitPatchDto,
-)
-from services.habit_service import (
-    delete_habit_by_name_and_user_id,
-    fetch_all_habit_by_user_id,
-    fetch_habit_by_name_and_job_id,
-    fetch_habit_by_name_and_user_id,
-)
-from sqlalchemy.exc import IntegrityError
+from models import app_models
+from schemas import habit_schema
+from services import habit_service
 
 from api.auth.dependencies import GetCurrentActiveUser
 
 router = APIRouter(prefix="/habits", tags=["habits"])
 
 
+@router.post(
+    "/",
+    description="Добавление новой привычки",
+    response_model=habit_schema.HabitOutDto,
+)
+async def add_habit(
+    habit_data: habit_schema.HabitAddDto,
+    user: GetCurrentActiveUser,
+    session: CommonAsyncSession,
+) -> app_models.Habit:
+    """Представление для добавления привычки."""
+    habit = await habit_service.add_habit_to_db(
+        habit_data=habit_data.model_dump(),
+        user_id=user.id,
+        session=session,
+    )
+
+    if habit is None:
+        raise HTTPException(status_code=400, detail="Ошибка добавления привычки.")
+
+    logger.debug("Добавлена привычка '{}'.", habit)
+    await session.refresh(habit, ["tracking"])
+    return habit
+
+
 @router.get(
     "/",
     description="Получение всех привычек пользователя.",
-    response_model=list[HabitOutDto],
+    response_model=list[habit_schema.HabitOutDto],
 )
 async def get_all_users_habits(
     user: GetCurrentActiveUser,
     session: CommonAsyncSession,
-) -> list[HabitOutDto]:
+    completed: Annotated[bool, Query(description="Показ завершенных привычек")] = False,
+) -> list[habit_schema.HabitOutDto]:
     """Представление для получения всех привычек пользователя."""
-    habits_orm = await fetch_all_habit_by_user_id(user_id=user.id, session=session)
+    habits_orm = await habit_service.fetch_all_habit_by_user_id(
+        user_id=user.id,
+        session=session,
+        completed=completed,
+    )
 
     if not habits_orm:
-        logger.error("Привычек не найдено.")
-        raise HTTPException(status_code=404, detail="Привычек не найдено.")
+        error_msg = "Привычек не найдено."
+        logger.error(error_msg)
+        raise HTTPException(status_code=404, detail=error_msg)
 
-    habits_dto = [HabitOutDto.model_validate(habit) for habit in habits_orm]
+    habits_dto = [
+        habit_schema.HabitOutDto.model_validate(habit) for habit in habits_orm
+    ]
     return habits_dto
 
 
-@router.post(
-    "/",
-    description="Добавление новой привычки",
-    response_model=HabitOutDto,
+@router.get(
+    "/{id:int}/",
+    description="Получение привычки по id.",
+    response_model=habit_schema.HabitOutDto,
 )
-async def add_habit(
-    habit_data: HabitAddDto,
+async def get_habit_by_id(
+    id: Annotated[int, Path()],
     user: GetCurrentActiveUser,
     session: CommonAsyncSession,
-) -> HabitOutDto:
-    """Представление для добавления привычки."""
-    reminder = Reminder(
-        remind_time=habit_data.remind_time,
-        remind_quantity=habit_data.remind_quantity,
-        job_id=habit_data.job_id,
-    )
-
-    habit = await fetch_habit_by_name_and_user_id(name=habit_data.name, user_id=user.id, session=session)
-
-    if habit is None:
-        habit = Habit(
-            name=habit_data.name,
-            description=habit_data.description,
-        )
-        habit.reminder = reminder
-        user.habits.append(habit)
-        # session.add_all([habit, reminder])
-
-    elif habit and habit.completed:
-        habit.completed = False
-        habit.description = habit_data.description
-        habit.reminder
-
-    elif habit and not habit.completed:
-        error_msg = "Привычка с таким названием уже контролируется."
+) -> app_models.Habit:
+    """Представление для получения привычки по id."""
+    habit = await habit_service.fetch_habit_by_id(id=id, session=session)
+    if not habit:
+        error_msg = f"Привычки c id={id} не найдено."
         logger.error(error_msg)
-        raise HTTPException(
-            status_code=409,
-            detail=error_msg,
-        )
+        raise HTTPException(status_code=404, detail=error_msg)
 
-    await session.commit()
-
-    # try:
-    #     await session.commit()
-    # except IntegrityError as exc:
-    #     error_msg = f"Привычка с такими данными уже есть: {exc.orig}"
-    #     logger.error(error_msg)
-    #     raise HTTPException(
-    #         status_code=409,
-    #         detail=error_msg,
-    #     )
-    await session.refresh(habit, ["user", "reminder", "tracking"])
-
-    logger.debug("Добавлена привычка '{}'.", habit)
-    return HabitOutDto.model_validate(habit)
-
-
-@router.get(
-    "/{name:str}/reminders/{job_id:str}/",
-    description="Получение привычки по названию и id задачи",
-    response_model=HabitOutDto,
-)
-async def get_habit_by_name_and_job_id(
-    name: Annotated[str, Path()],
-    job_id: Annotated[str, Path()],
-    session: CommonAsyncSession,
-) -> HabitOutDto:
-    """Представление для получения привычки по названию и id задачи."""
-    habit = await fetch_habit_by_name_and_job_id(
-        name=name,
-        job_id=job_id,
-        session=session,
-    )
-    if not habit:
-        logger.error("Привычки '{}' не найдено.", name)
-        raise HTTPException(status_code=404, detail=f"Привычки '{name}' не найдено.")
-
-    return HabitOutDto.model_validate(habit)
-
-
-@router.get(
-    "/{name:str}/",
-    description="Получение привычки по названию.",
-    response_model=HabitOutDto,
-)
-async def get_habit_by_name(
-    name: Annotated[str, Path()],
-    user: GetCurrentActiveUser,
-    session: CommonAsyncSession,
-) -> HabitOutDto:
-    """Представление для получения привычки по названию."""
-    habit = await fetch_habit_by_name_and_user_id(
-        name=name,
-        user_id=user.id,
-        session=session,
-    )
-    if not habit:
-        logger.error("Привычки '{}' не найдено.", name)
-        raise HTTPException(status_code=404, detail=f"Привычки '{name}' не найдено.")
-
-    return HabitOutDto.model_validate(habit)
+    return habit
 
 
 @router.patch(
-    "/{name:str}/",
+    "/{id:int}/",
     description="Изменение привычки",
-    response_model=HabitOutDto,
+    response_model=habit_schema.HabitOutDto,
 )
-async def patch_habit(
-    name: Annotated[str, Path()],
-    habit_data: HabitPatchDto,
+async def modify_habit_data(
+    id: Annotated[int, Path()],
+    habit_data: habit_schema.HabitPatchDto,
     user: GetCurrentActiveUser,
     session: CommonAsyncSession,
-) -> HabitOutDto:
+) -> app_models.Habit:
     """Представление для изменения привычки."""
-    habit = await fetch_habit_by_name_and_user_id(
-        name=name,
-        user_id=user.id,
+
+    habit, edited = await habit_service.edit_habit(
+        id=id,
+        data=habit_data.model_dump(),
         session=session,
     )
-    if not habit:
-        logger.error("Привычки '{}' не найдено.", habit_data.name)
-        raise HTTPException(
-            status_code=404, detail=f"Привычки '{habit_data.name}' не найдено."
-        )
+    if habit is None:
+        error_msg = f"Привычки c id={id} не найдено."
+        logger.error(error_msg)
+        raise HTTPException(status_code=404, detail=error_msg)
 
-    if habit_data.name:
-        habit.name = habit_data.name
+    if edited:
+        logger.debug("Данные привычки {} изменены.", habit)
 
-    if habit_data.description:
-        habit.description = habit_data.description
-
-    if habit_data.remind_quantity and habit_data.remind_quantity > 0:
-        habit.reminder.remind_quantity = habit_data.remind_quantity
-
-    if habit_data.remind_time:
-        habit.reminder.remind_time = habit_data.remind_time
-
-    await session.commit()
-    await session.refresh(habit, ["reminder", "tracking"])
-
-    logger.debug("Изменена привычка '{}'.", habit)
-    return HabitOutDto.model_validate(habit)
+    return habit
 
 
 @router.delete(
-    "/{name:str}/",
+    "/{id:int}/",
     description="Удаление привычки",
-    response_model=HabitDeleteInfoDto,
+    response_model=habit_schema.HabitDeleteInfoDto,
 )
 async def delete_habit(
-    name: Annotated[str, Path()],
+    id: Annotated[int, Path()],
     user: GetCurrentActiveUser,
     session: CommonAsyncSession,
-) -> HabitDeleteInfoDto:
+) -> habit_schema.HabitDeleteInfoDto:
     """Представление для удаления привычки."""
-    if not name:
-        logger.error("Не указано название привычки.")
-        raise HTTPException(status_code=400, detail="Не указано название привычки.")
 
-    deleted_habit_id = await delete_habit_by_name_and_user_id(
-        name=name,
-        user_id=user.id,
-        session=session,
-    )
+    deleted_habit_id = await habit_service.delete_habit(id=id, session=session)
     if not deleted_habit_id:
-        logger.error("Привычки '{}' не найдено.", name)
-        raise HTTPException(status_code=404, detail=f"Привычки '{name}' не найдено.")
-    return HabitDeleteInfoDto(habit_id=deleted_habit_id)
+        error_msg = f"Привычки c id={id} не найдено."
+        logger.error(error_msg)
+        raise HTTPException(status_code=404, detail=error_msg)
+
+    return habit_schema.HabitDeleteInfoDto(habit_id=deleted_habit_id)
 
 
 @router.post(
-    "/confirm_completed/",
+    "/confirm_execution/",
     description="Регистрация выполнения привычки",
-    response_model=HabitOutDto,
+    response_model=habit_schema.HabitOutDto,
 )
-async def process_mark_completion(
-    confirm_data: HabitCompletedDto,
+async def registering_habit_execution(
+    confirm_data: habit_schema.HabitExecutionData,
     user: GetCurrentActiveUser,
     session: CommonAsyncSession,
-) -> HabitOutDto:
+) -> app_models.Habit:
     """Представление для регистрации выполнения привычки."""
-    habit = await fetch_habit_by_name_and_user_id(
-        name=confirm_data.name,
-        user_id=user.id,
+    habit = await habit_service.fetch_habit_by_id(
+        id=confirm_data.habit_id,
         session=session,
     )
     if not habit:
-        logger.error("Привычки '{}' не найдено.", confirm_data.name)
-        raise HTTPException(
-            status_code=404,
-            detail=f"Привычки '{confirm_data.name}' не найдено.",
-        )
+        error_msg = f"Привычки '{confirm_data.habit_id}' не найдено."
+        logger.error(error_msg)
+        raise HTTPException(status_code=404, detail=error_msg)
 
-    tracking_orm = Tracking(alert_time=confirm_data.alert_time)
-    habit.tracking.append(tracking_orm)
+    tracking = app_models.Tracking(execution_time=confirm_data.execution_time)
+    habit.tracking.append(tracking)
     await session.commit()
-    await session.refresh(habit, ["reminder", "tracking"])
     logger.debug("Зарегистрировано выполнение привычки '{}'.", habit)
 
-    if habit.reminder.remind_quantity == len(habit.tracking):
+    if habit.remind_quantity == len(habit.tracking):
         habit.completed = True
-        logger.debug("Привитие привычки '{}' завершено.", habit)
         await session.commit()
-        # await session.refresh(habit, ["reminder", "tracking"])
+        logger.debug("Привитие привычки '{}' завершено.", habit)
 
-    return HabitOutDto.model_validate(habit)
+    return habit

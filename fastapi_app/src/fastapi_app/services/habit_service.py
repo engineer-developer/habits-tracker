@@ -1,116 +1,124 @@
 """Модуль обслуживания привычек."""
 
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Any, Coroutine
 
 from core.loguru_config import logger
 from fastapi import HTTPException
-from models.app_models import Habit, Reminder
+from models.app_models import Habit
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.exc import DBAPIError
 
 
-async def add_habit_to_db(habit: Habit, session: AsyncSession) -> bool:
-    """Добавление привычки в базу данных."""
+async def add_habit_to_db(
+    habit_data: dict, user_id: int, session: AsyncSession
+) -> Habit | None:
+    """Функция добавления привычки в базу данных."""
+    habit = Habit(
+        title=habit_data.get("title"),
+        description=habit_data.get("description"),
+        remind_time=habit_data.get("remind_time"),
+        remind_quantity=habit_data.get("remind_quantity"),
+        completed=False,
+        user_id=user_id,
+    )
     session.add(habit)
+
     try:
         await session.commit()
-        return True
-    except Exception as exc:
+        return habit
+    except DBAPIError as exc:
         logger.error(exc)
-        raise HTTPException(status_code=400, detail=exc)
+        return None
 
 
 async def fetch_habit_by_id(id: int, session: AsyncSession) -> Habit:
-    """Извлечение привычки из базы данных по id."""
+    """Функция извлечения привычки из базы данных по id."""
     stmt = (
         select(Habit)
         .where(Habit.id == id)
         .options(
             joinedload(Habit.user),
-            joinedload(Habit.reminder),
             selectinload(Habit.tracking),
         )
     )
     habit = await session.scalar(stmt)
     logger.debug("Получена привычка: {}", habit)
     return habit
-
-
-async def fetch_habit_by_name_and_user_id(
-    name: str, user_id: int, session: AsyncSession
-) -> Optional[Habit]:
-    """Извлечение привычки из базы данных по name и user_id."""
-    stmt = (
-        select(Habit)
-        .filter_by(name=name, user_id=user_id)
-        .options(
-            joinedload(Habit.user),
-            joinedload(Habit.reminder),
-            selectinload(Habit.tracking),
-        )
-    )
-    habit = await session.scalar(stmt)
-    if habit:
-        logger.debug("Получена привычка: {}", habit)
-        return habit
-    else:
-        return None
-
-
-async def fetch_habit_by_name_and_job_id(
-    name: str, job_id: str, session: AsyncSession
-) -> Habit:
-    """Извлечение привычки из базы данных по name и job_id."""
-    stmt = (
-        select(Habit)
-        .join(Reminder, Reminder.habit_id == Habit.id)
-        .filter(
-            Reminder.job_id == job_id,
-            Habit.name == name,
-        )
-        .options(
-            joinedload(Habit.reminder),
-            selectinload(Habit.tracking),
-        )
-    )
-    habit = await session.scalar(stmt)
-    logger.debug("Получена привычка: {}", habit)
-    return habit
-
-
-async def delete_habit_by_name_and_user_id(
-    name: str, user_id: int, session: AsyncSession
-) -> int | None:
-    """Удаление привычки из базы данных по name и user_id."""
-    stmt = delete(Habit).filter_by(name=name, user_id=user_id).returning(Habit.id)
-    res = await session.execute(stmt)
-    deleted_habit_id = res.scalar()
-    if not deleted_habit_id:
-        return None
-    await session.commit()
-    logger.debug("Удалена привычка c id={}", deleted_habit_id)
-    return deleted_habit_id
 
 
 async def fetch_all_habit_by_user_id(
-    user_id: int, session: AsyncSession,
+    user_id: int,
+    session: AsyncSession,
+    completed=False,
 ) -> Sequence[Habit]:
-    """Извлечение всех привычек пользователя."""
+    """Функция извлечения всех привычек пользователя.
+
+    По умолчанию извлекает только незавершенные привычки.
+    """
     stmt = (
         select(Habit)
-        .where(Habit.user_id == user_id)
+        .filter(
+            Habit.user_id == user_id,
+            Habit.completed == completed,
+        )
         .options(
             joinedload(Habit.user),
-            joinedload(Habit.reminder),
             selectinload(Habit.tracking),
         )
     )
-    if is_not_completed==True:
-        stmt = stm
-    res = await session.scalars(stmt)
-    habits = res.all()
+    result = await session.scalars(stmt)
+    habits = result.all()
     logger.debug("Получены привычки: {}", habits)
     return habits
 
 
+async def edit_habit(
+    id: int, data: dict, session: AsyncSession
+) -> [Optional[Habit], bool]:
+    """Функция изменения данных привычки."""
+    edited: bool = False
+
+    habit = await fetch_habit_by_id(id=id, session=session)
+    if not habit:
+        return None, edited
+
+    title = data.get("title")
+    if title is not None:
+        habit.title = title
+        edited = True
+
+    description = data.get("description")
+    if description is not None:
+        habit.description = description
+        edited = True
+
+    remind_quantity = data.get("remind_quantity")
+    if remind_quantity is not None and remind_quantity > 0:
+        habit.remind_quantity = remind_quantity
+        edited = True
+
+    remind_time = data.get("remind_time")
+    if remind_time is not None:
+        habit.remind_time = remind_time
+        edited = True
+
+    if edited:
+        await session.commit()
+
+    return habit, edited
+
+
+async def delete_habit(id: int, session: AsyncSession) -> int | None:
+    """Функция удаления привычки из базы данных."""
+    stmt = delete(Habit).filter(Habit.id == id).returning(Habit.id)
+    result = await session.execute(stmt)
+    deleted_habit_id = result.scalar()
+
+    if not deleted_habit_id:
+        return None
+
+    await session.commit()
+    logger.debug("Удалена привычка c id={}", deleted_habit_id)
+    return deleted_habit_id

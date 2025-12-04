@@ -10,9 +10,9 @@ from telebot.types import CallbackQuery, Message
 from tg_bot.core.config import Settings
 from tg_bot.keyboards import kb_factory
 from tg_bot.schemas.user_schema import UserLoginSchema, UserRegisterSchema
-from tg_bot.services.logging_services import logger
-from tg_bot.services.redis_services import redis_service
-from tg_bot.services.request_services import requests_service, TokenAuthSessionStrategy
+from tg_bot.service_layer.logging_service import logger
+from tg_bot.service_layer.redis_service import redis_service
+from tg_bot.service_layer.request_service import requests_service, TokenAuthSessionStrategy
 from tg_bot.states.states import AuthStates
 
 
@@ -77,7 +77,7 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
 
     @bot.callback_query_handler(func=lambda callback: callback.data == "cb_login")
     def process_login(callback: CallbackQuery) -> None:
-        """Функция обработки callback 'cb_login'."""
+        """Вход пользователя в систему."""
         bot.set_state(
             user_id=callback.from_user.id,
             state=AuthStates.wait_password_for_login,
@@ -151,7 +151,7 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
 
     @bot.callback_query_handler(func=lambda callback: callback.data == "cb_register")
     def process_register(callback: CallbackQuery) -> None:
-        """Функция обработки callback cb_register."""
+        """Регистрация пользователя."""
         bot.set_state(
             user_id=callback.from_user.id,
             state=AuthStates.wait_password_for_register,

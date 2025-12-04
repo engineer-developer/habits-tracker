@@ -11,7 +11,7 @@ from requests.exceptions import RequestException
 
 from tg_bot.core.config import settings
 from tg_bot.schemas.habit_schema import HabitAddDto
-from tg_bot.services.logging_services import logger
+from tg_bot.service_layer.logging_service import logger
 
 
 class SessionStrategy(ABC):
@@ -30,11 +30,12 @@ class NoAuthSessionStrategy(SessionStrategy):
         return requests.Session()
 
 
-@dataclass
 class TokenAuthSessionStrategy(SessionStrategy):
     """Стратегия создания сессии, с jwt токеном в заголовке."""
 
-    token: str
+    def __init__(self, token: str) -> None:
+        """Логика инициализации."""
+        self.token = token
 
     def create_session(self) -> requests.Session:
         """Создание сессии."""
@@ -43,28 +44,24 @@ class TokenAuthSessionStrategy(SessionStrategy):
         return session
 
 
-@dataclass
 class RequestService:
     """Сервис взаимодействия с бэкэндом."""
 
-    api_url: str
-    logger: loguru.logger
-    _session_strategy: Optional[SessionStrategy] = None
-    _requests_session: Optional[requests.Session] = None
-
-    def __post_init__(self):
+    def __init__(self, api_url: str, logger: loguru.logger) -> None:
         """Логика инициализации."""
+        self.api_url = api_url
+        self.logger = logger
         self._session_strategy = NoAuthSessionStrategy()
         self._requests_session = self._session_strategy.create_session()
 
     @property
     def strategy(self) -> SessionStrategy:
-        """Отображаем _session_strategy."""
+        """Геттер _session_strategy."""
         return self._session_strategy
 
     @strategy.setter
     def strategy(self, new_strategy: SessionStrategy) -> None:
-        """Устанавливаем _session_strategy."""
+        """Сеттер _session_strategy."""
         self._session_strategy = new_strategy
         self._requests_session.close()
         self._requests_session = self._session_strategy.create_session()
@@ -84,7 +81,7 @@ class RequestService:
             except RequestException as exc:
                 self.logger.error(exc)
 
-    def upload_new_habit_data(self, data: HabitAddDto) -> bool:
+    def upload_new_habit_data(self, data: HabitAddDto) -> Optional[dict]:
         """Отправка данных новой привычки."""
         url = self.api_url + "habits/"
 
@@ -93,10 +90,10 @@ class RequestService:
                 response = req.post(url, json=data.model_dump(mode="json"))
                 response.raise_for_status()
                 self.logger.debug("Данные привычки успешно отправлены.")
-                return True
+                return response.json()
             except RequestException as exc:
                 self.logger.error(exc)
-                return False
+                return None
 
     def get_all_habits_info(self) -> dict | bool:
         """Получаем данные о всех привычках пользователя."""

@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class HabitBaseDto(BaseModel):
     """Базовая схема привычки."""
 
-    name: str = Field(max_length=100)
+    title: str = Field(max_length=250)
     description: str
 
 
@@ -17,7 +17,6 @@ class HabitAddDto(HabitBaseDto):
 
     remind_time: datetime.time
     remind_quantity: int = Field(gt=0)
-    job_id: str
 
 
 class HabitDataDto(HabitAddDto):
@@ -25,5 +24,4 @@ class HabitDataDto(HabitAddDto):
 
     user_id: int
     chat_id: int
-
 

@@ -44,14 +44,9 @@ class Model(Base):
 
 
 class TimestampMixin:
-    """Миксин для дополнения модели временем создания и обновления."""
+    """Миксин для дополнения модели временем создания.."""
 
     created_at: Mapped[datetime] = mapped_column(
         default=datetime.now(tz=UTC).replace(tzinfo=None),
         server_default=func.now(),
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        default=datetime.now(tz=UTC).replace(tzinfo=None),
-        server_default=func.now(),
-        onupdate=func.now(),
     )

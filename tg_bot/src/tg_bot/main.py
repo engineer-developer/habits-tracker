@@ -3,8 +3,8 @@
 from tg_bot.core.bot_factory import bot
 from tg_bot.core.config import settings
 from tg_bot.handlers import register_handlers
-from tg_bot.services.logging_services import logger
-from tg_bot.services.scheduler_services import scheduler
+from tg_bot.service_layer.logging_service import logger
+from tg_bot.service_layer.scheduler_service import scheduler
 
 
 def main() -> None:

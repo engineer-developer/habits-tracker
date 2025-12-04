@@ -40,7 +40,6 @@ class UserOutDto(UserExtendDto):
     id: int = Field(description="ID")
     is_active: bool = Field(description="Пользователь активен")
     created_at: datetime = Field(description="Время создания")
-    updated_at: datetime = Field(description="Время обновления")
 
 
 class UsersListDto(BaseModel):

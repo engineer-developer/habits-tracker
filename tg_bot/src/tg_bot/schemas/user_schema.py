@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from pydantic import BaseModel, Field, SecretStr, ConfigDict
+from pydantic import BaseModel, Field
 
 
 class UserIdSchema(BaseModel):

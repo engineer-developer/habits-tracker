@@ -11,12 +11,12 @@ from tg_bot.core.config import Settings
 from tg_bot.keyboards import kb_factory
 from tg_bot.keyboards.kb_factory import kb_habit_add_or_cancel, kb_habits_list
 from tg_bot.schemas.habit_schema import HabitDataDto
-from tg_bot.services.logging_services import logger
-from tg_bot.services.message_services import send_notice
-from tg_bot.services.notify_services import HabitNotifyService, habit_notify_service
-from tg_bot.services.redis_services import redis_service
-from tg_bot.services.request_services import requests_service, TokenAuthSessionStrategy
-from tg_bot.services.scheduler_services import scheduler_service
+from tg_bot.service_layer.logging_service import logger
+from tg_bot.service_layer.message_service import send_notice
+from tg_bot.service_layer.notify_service import HabitNotifyService, habit_notify_service
+from tg_bot.service_layer.redis_service import redis_service
+from tg_bot.service_layer.request_service import requests_service, TokenAuthSessionStrategy
+from tg_bot.service_layer.scheduler_service import scheduler_service
 from tg_bot.states.states import HabitAddStates
 
 
@@ -24,7 +24,7 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
     """Регистрируем обработчики команд."""
 
     @bot.callback_query_handler(
-        func=lambda callback: callback.data == "cb_get_all_habits"
+        func=lambda callback: callback.data == "menu_habits_list"
     )
     def get_all_habits(callback: CallbackQuery) -> None:
         """Обработчик callback для получения всех привычек пользователя."""
@@ -36,6 +36,11 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
                 chat_id=callback.message.chat.id,
                 text="Вырабатываем привычки:",
                 reply_markup=kb_habits_list(habits_info),
+            )
+        else:
+            bot.send_message(
+                chat_id=callback.message.chat.id,
+                text="Пока нет привычек для привития.",
             )
 
     @bot.callback_query_handler(func=lambda callback: callback.data == "menu_add_habit")
@@ -60,13 +65,13 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
 
     def get_habit_name(message: Message) -> None:
         """Получение названия привычки."""
-        name = message.text
-        logger.debug("Введено название привычки: {}", name)
+        title = message.text
+        logger.debug("Введено название привычки: {}", title)
 
         bot.add_data(
             user_id=message.from_user.id,
             chat_id=message.chat.id,
-            name=name,
+            title=title,
         )
         msg = bot.send_message(
             chat_id=message.chat.id,
@@ -139,19 +144,19 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
             chat_id=message.chat.id,
             remind_quantity=remind_quantity,
         )
-        habit_info = {}
+        habit_data = {}
         with bot.retrieve_data(
             user_id=message.from_user.id,
             chat_id=message.chat.id,
         ) as data:
             logger.debug("Данные добавляемой привычки: {}", data)
-            habit_info.update(data)
+            habit_data.update(data)
 
         text_parts = (
-            f"Название привычки: *{habit_info.get('name')}*",
-            f"Описание: *{habit_info.get('description')}*",
-            f"Время напоминания: *{habit_info.get('remind_time')}*",
-            f"Количество напоминаний: *{habit_info.get('remind_quantity')}*",
+            f"Название привычки: *{habit_data.get('title')}*",
+            f"Описание: *{habit_data.get('description')}*",
+            f"Время напоминания: *{habit_data.get('remind_time')}*",
+            f"Количество напоминаний: *{habit_data.get('remind_quantity')}*",
         )
         msg_text = "\n".join(text_parts)
 
@@ -169,26 +174,19 @@ def register_handlers(bot: TeleBot, settings: Settings) -> None:
         - Направление информации о привычке в бэкэнд.
         - Добавление задания о напоминании в APScheduler.
         """
-        habit_info = {}
+        habit_data = dict()
         with bot.retrieve_data(
             user_id=callback.from_user.id,
             chat_id=callback.message.chat.id,
         ) as data:
-            habit_info.update(data)
+            habit_data.update(data)
 
-        habit_info["job_id"] = uuid.uuid4().hex
-        habit_info["user_id"] = callback.from_user.id
-        habit_info["chat_id"] = callback.message.chat.id
-
-        try:
-            habit_data = HabitDataDto(**habit_info)
-        except ValidationError as exc:
-            logger.error(exc.errors())
-            return False
+        habit_data["user_id"] = callback.from_user.id
+        habit_data["chat_id"] = callback.message.chat.id
 
         success = habit_notify_service.process_notify(
             func=send_notice,
-            data=habit_data,
+            habit_data=habit_data,
         )
         if not success:
             logger.error("Не удалось обработать данные.")
