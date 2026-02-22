@@ -1,13 +1,13 @@
 from typing import AsyncGenerator, AsyncIterator, Any, Generator
 
 import pytest
-from core.config import get_settings
-from core.database import get_async_session
+from configs import get_settings
+from dependencies.database import get_async_session
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from main import create_app
-from models.app_models import User
-from models.base_model import Base
+from models.users import User
+from models.base import Base
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,

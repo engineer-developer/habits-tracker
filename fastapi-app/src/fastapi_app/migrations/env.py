@@ -13,9 +13,12 @@ import sys
 
 # Добавляем корень проекта в path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.base_model import Base
-from models import app_models  # не удалять
-from core.config import get_settings
+
+import models
+
+# не удалять следующую строку
+# from models import app_models  # noqa
+from configs import get_settings
 
 settings = get_settings()
 
@@ -24,12 +27,11 @@ settings = get_settings()
 # access to the values within the .ini file in use.
 config = context.config
 
-# Устанавливаем db_url
-db_url = settings.db_url.unicode_string()
-if db_url:
-    config.set_main_option("sqlalchemy.url", db_url)
-else:
-    print(f"BROKEN DB_URL: {db_url}")
+# Устанавливаем db_dsn
+config.set_main_option(
+    "sqlalchemy.url",
+    settings.db.dsn.render_as_string(hide_password=False),
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -40,7 +42,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+target_metadata = models.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

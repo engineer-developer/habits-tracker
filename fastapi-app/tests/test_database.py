@@ -2,7 +2,7 @@
 
 import pytest
 from conftest import test_engine
-from models.app_models import User
+from models.users import User
 from sqlalchemy import inspect, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 

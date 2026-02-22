@@ -1,17 +1,20 @@
-"""Модуль создания базовой модели базы данных.
-
-Шаблон соглашения об именовании - naming_convention.
-Метаданные - metadata.
-Обобщенный реестр для сопоставления классов - custom_registry.
-Базовая модель - Model.
-Миксин для дополнения модели временем создания и обновления - TimestampMixin.
-"""
+"""Модуль базовой ORM модели базы данных."""
 
 from datetime import UTC, datetime
+from typing import TypeVar
 
 from sqlalchemy import MetaData, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, registry
+
+__all__ = (
+    "Model",
+    "BaseOrmModel",
+    "TimestampMixin",
+    "metadata",
+)
+
+Model = TypeVar("Model", bound="BaseOrmModel")
 
 naming_convention = {
     "ix": "ix_%(column_0_label)s",
@@ -20,31 +23,24 @@ naming_convention = {
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
 }
-
 metadata = MetaData(naming_convention=naming_convention)
-
 custom_registry = registry(metadata=metadata)
 
 
-class Base(AsyncAttrs, DeclarativeBase):
-    """Базовая модель."""
+class BaseOrmModel(AsyncAttrs, DeclarativeBase):
+    """Базовая ORM модель."""
 
     __abstract__ = True
     registry = custom_registry
 
-
-class Model(Base):
-    """Модель с id."""
-
-    __abstract__ = True
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id}>"
 
 
 class TimestampMixin:
-    """Миксин для дополнения модели временем создания.."""
+    """Миксин для дополнения ORM модели временем создания."""
 
     created_at: Mapped[datetime] = mapped_column(
         default=datetime.now(tz=UTC).replace(tzinfo=None),

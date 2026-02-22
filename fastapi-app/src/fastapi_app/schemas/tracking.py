@@ -2,17 +2,19 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
+
+from .base import BaseDtoModel
 
 
-class TrackingBaseDto(BaseModel):
+class TrackingBaseDto(BaseDtoModel):
     """Схема отслеживания привычки."""
 
     habit_id: int
     alert_time: datetime
 
 
-class TrackingOutDto(BaseModel):
+class TrackingOutDto(BaseDtoModel):
     """Схема вывода информации об отслеживании привычки."""
 
     model_config = ConfigDict(from_attributes=True)

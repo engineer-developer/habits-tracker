@@ -1,10 +1,9 @@
 """Модуль обслуживания привычек."""
 
-from typing import Sequence, Optional, Any, Coroutine
+from typing import Sequence, Optional
 
-from core.loguru_config import logger
-from fastapi import HTTPException
-from models.app_models import Habit
+from configs.loguru_config import logger
+from models.habits import Habit
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
