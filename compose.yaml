@@ -1,47 +1,56 @@
 name: habits-tracker
 
+
+x-common: &common-env
+  env_file: .env
+
+
 services:
 
   postgres:
+    <<:
+      - *common-env
     image: postgres:17.0
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB__USER}
+      POSTGRES_PASSWORD: ${DB__PASSW}
+      POSTGRES_DB: ${DB__NAME}
     ports:
-      - "${DB_EXTERNAL_PORT}:${DB_INTERNAL_PORT}"
+      - "${DB__EXTERNAL_PORT}:${DB__PORT}"
     restart: always
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
       - backend
 
+
   fastapi_app:
+    <<:
+      - *common-env
     build:
-      context: fastapi_app/.
+      dockerfile: ./docker/fastapi_app/Dockerfile
+      context: .
     environment:
-      DB_URL: "postgresql+asyncpg://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_INTERNAL_PORT}/${DB_NAME}"
-      SECRET_KEY: ${FASTAPI_SECRET_KEY}
+      DB__HOST: postgres
     ports:
-      - "${FASTAPI_PORT}:8000"
+      - "${APP__EXTERNAL_PORT}:${APP__PORT}"
     depends_on:
       - postgres
     command: >
-      uvicorn src.fastapi_app.main:app --host 0.0.0.0 --port 8000 --reload
+      uv run uvicorn main:app --host 0.0.0.0 --port ${APP__PORT}
     develop:
       watch:
-        - action: rebuild
-          path: ./fastapi_app/pyproject.toml
-          target: /app/pyproject.toml
-        - action: sync
-          path: ./fastapi_app/src/
-          target: /app/src/
-    restart: unless-stopped
+        - action: sync+restart
+          path: fastapi-app/src/
+          target: /usr/app/
+#    restart: unless-stopped
     networks:
       - backend
 
+
+
   redis:
-    image: redis
+    image: redis:7-alpine
     ports:
       - "6379:6379"
     restart: always
@@ -50,9 +59,11 @@ services:
     networks:
       - backend
 
+
 volumes:
   pg_data:
   redis_data:
+
 
 networks:
   backend:
