@@ -1,13 +1,14 @@
 """Модуль обслуживания привычек."""
 
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
-from configs.loguru_config import logger
-from models.habits import Habit
 from sqlalchemy import delete, select
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
-from sqlalchemy.exc import DBAPIError
+
+from fastapi_app.configs.loguru_config import logger
+from fastapi_app.models.habits import Habit
 
 
 async def add_habit_to_db(

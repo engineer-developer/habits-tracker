@@ -1,13 +1,11 @@
 """Модуль схем валидации и сериализации пользователя."""
 
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 
 from pydantic import ConfigDict, Field, SecretStr
 
-from . import BaseDtoModel
 from .base import BaseDtoModel
-
 from .habits import HabitRead
 
 

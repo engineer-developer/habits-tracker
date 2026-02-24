@@ -1,15 +1,13 @@
 from contextlib import AbstractAsyncContextManager
 from typing import Callable, Optional, Type
 
-from sqlalchemy.orm import selectinload
-
-from models import User
+from fastapi_app.models import User
 from sqlalchemy import delete, select
-from sqlalchemy.exc import IntegrityError, DatabaseError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from repositories.base import Repository
-from repositories.exceptions import EntityAlreadyExist, EmptyResult
+from fastapi_app.repositories.base import Repository
+from fastapi_app.exceptions.repositories import EntityAlreadyExist, EmptyResult
 
 
 class UserRepository(Repository):

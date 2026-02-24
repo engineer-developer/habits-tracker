@@ -57,7 +57,6 @@ class AuthSettings(BaseModel):
     secret_key: SecretStr
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
-    login_url: str
 
 
 class Settings(_Settings):

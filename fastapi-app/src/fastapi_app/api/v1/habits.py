@@ -1,10 +1,6 @@
 """Модуль представлений привычек."""
 
-# from dependencies.database import CommonAsyncSession
 from fastapi.routing import APIRouter
-
-
-# from dependencies.users import GetCurrentActiveUser
 
 router = APIRouter(prefix="/habits", tags=["habits"])
 

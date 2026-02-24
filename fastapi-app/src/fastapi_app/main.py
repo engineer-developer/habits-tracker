@@ -3,11 +3,13 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from api import api_v1_router
-from fastapi import FastAPI
 import uvicorn
-from containers.app_container import AppContainer
-from configs.app_config import get_settings, Settings
+from fastapi import FastAPI
+
+from fastapi_app.api.v1 import router as api_v1_router
+from fastapi_app.configs.config import Settings
+from fastapi_app.containers.app_container import AppContainer
+
 
 def create_app() -> FastAPI:
     """Создаем приложение Fastapi."""
@@ -21,7 +23,7 @@ def create_app() -> FastAPI:
 
     container = AppContainer()
     container.config.from_pydantic(Settings())
-    container.wire(packages=["api"])
+    container.wire(packages=[".api"])
 
     app = FastAPI(lifespan=lifespan)
     app.container = container

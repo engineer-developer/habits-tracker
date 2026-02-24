@@ -25,9 +25,9 @@ class Habit(TimestampMixin, BaseOrmModel):
 
     user: Mapped["User"] = relationship(
         back_populates="habits",
-        lazy="joined",
+        lazy="joined",  # для связи многие к одному
     )
     tracking: Mapped[list["Tracking"]] = relationship(
         back_populates="habit",
-        lazy="selectin",
+        lazy="selectin",  # для связи один ко многим
     )

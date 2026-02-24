@@ -19,4 +19,7 @@ class Tracking(TimestampMixin, BaseOrmModel):
     execution_time: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))
     habit_id: Mapped[int] = mapped_column(ForeignKey("habits.id", ondelete="CASCADE"))
 
-    habit: Mapped["Habit"] = relationship(back_populates="tracking")
+    habit: Mapped["Habit"] = relationship(
+        back_populates="tracking",
+        lazy="joined",
+    )

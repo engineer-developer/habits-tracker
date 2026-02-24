@@ -1,16 +1,20 @@
 """Модуль операций с пользователями."""
 
-from models.users import User
-from repositories.exceptions import EmptyResult, EntityAlreadyExist
-from repositories.users import UserRepository
-from schemas.users import UserCreateCommand, UserRead, UserReadWithPassword
 from sqlalchemy.exc import DatabaseError
 
-from services.exceptions import (
+from fastapi_app.exceptions.repositories import EmptyResult, EntityAlreadyExist
+from fastapi_app.exceptions.services import (
     DbException,
     UserAlreadyExistException,
     UserIsNotActiveException,
     UserNotFoundException,
+)
+from fastapi_app.models.users import User
+from fastapi_app.repositories.users import UserRepository
+from fastapi_app.schemas.users import (
+    UserCreateCommand,
+    UserRead,
+    UserReadWithPassword,
 )
 
 

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import BigInteger, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models.base import BaseOrmModel, TimestampMixin
+from .base import BaseOrmModel, TimestampMixin
 
 if TYPE_CHECKING:
     from .habits import Habit

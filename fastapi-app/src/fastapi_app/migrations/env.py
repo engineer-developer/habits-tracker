@@ -7,20 +7,15 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# Импорт моделей
-import os
+# Добавляем корень проекта в path
+from os.path import dirname, abspath
 import sys
 
-# Добавляем корень проекта в path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-import models
-
-# не удалять следующую строку
-# from models import app_models  # noqa
-from configs import get_settings
-
-settings = get_settings()
+# Импорт моделей
+import fastapi_app.models
+from fastapi_app.configs.config import get_settings
 
 
 # this is the Alembic Config object, which provides
@@ -28,6 +23,7 @@ settings = get_settings()
 config = context.config
 
 # Устанавливаем db_dsn
+settings = get_settings()
 config.set_main_option(
     "sqlalchemy.url",
     settings.db.dsn.render_as_string(hide_password=False),
@@ -42,7 +38,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = models.metadata
+target_metadata = fastapi_app.models.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

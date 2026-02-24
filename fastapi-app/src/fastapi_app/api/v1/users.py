@@ -2,12 +2,12 @@
 
 from typing import Annotated
 
-from dependencies.auth import get_current_user_telegram_id
-from dependencies.users import DepsUserService
+from fastapi_app.dependencies.auth import get_current_user_telegram_id
+from fastapi_app.dependencies.users import DepsUserService
 from dependency_injector.wiring import inject
 from fastapi import Depends, status
 from fastapi.routing import APIRouter
-from schemas import UserRead
+from fastapi_app.schemas.users import UserRead
 
 router = APIRouter(prefix="/users", tags=["users"])
 

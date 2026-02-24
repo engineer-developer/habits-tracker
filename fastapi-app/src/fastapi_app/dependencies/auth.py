@@ -1,14 +1,18 @@
+from typing import Annotated
+
 import jwt
 from dependency_injector.wiring import Provide
-from jwt import ExpiredSignatureError, InvalidTokenError
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends, HTTPException
-from typing import Annotated
-from configs.app_config import get_settings
-from containers.app_container import AppContainer
-from dependencies.exceptions import TokenExpired, TokenInvalid, TokenDataLoss
-from services import AuthService
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from fastapi_app.configs.config import get_settings
+from fastapi_app.containers.app_container import AppContainer
+from fastapi_app.exceptions.auth import (
+    TokenDataLoss,
+    TokenExpired,
+    TokenInvalid,
+)
+from fastapi_app.services.auth import AuthService
 
 auth_schema = HTTPBearer()
 settings = get_settings()
@@ -28,9 +32,9 @@ async def get_jwt_payload(
             key=settings.auth.secret_key.get_secret_value(),
             algorithms=[settings.auth.algorithm],
         )
-    except ExpiredSignatureError:
+    except jwt.ExpiredSignatureError:
         raise TokenExpired()
-    except InvalidTokenError as exc:
+    except jwt.InvalidTokenError as exc:
         raise TokenInvalid(detail=str(exc))
 
     sub = payload.get("sub")

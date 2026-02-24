@@ -1,6 +1,6 @@
-from starlette import status
+from fastapi import status
 
-from exceptions import BaseApiException
+from fastapi_app.exceptions.base import BaseApiException
 
 
 class TokenExpired(BaseApiException):

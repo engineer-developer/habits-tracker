@@ -3,10 +3,11 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from pwdlib import PasswordHash
 from pydantic import SecretStr
-from schemas import TokenDto, UserCreateCommand, UserCredentials
 
-from services import UserService
-from services.exceptions import InvalidPasswordException
+from fastapi_app.exceptions.services import InvalidPasswordException
+from fastapi_app.schemas.auth import TokenDto
+from fastapi_app.schemas.users import UserCreateCommand, UserCredentials
+from fastapi_app.services.users import UserService
 
 password_hash = PasswordHash.recommended()
 

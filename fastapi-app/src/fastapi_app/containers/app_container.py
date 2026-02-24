@@ -1,7 +1,9 @@
-from database.database import Database
 from dependency_injector import containers, providers
-from repositories.users import UserRepository
-from services import UserService, AuthService
+
+from fastapi_app.database.database import Database
+from fastapi_app.repositories.users import UserRepository
+from fastapi_app.services.auth import AuthService
+from fastapi_app.services.users import UserService
 
 
 class AppContainer(containers.DeclarativeContainer):

@@ -17,8 +17,8 @@ ENV PATH="/usr/app/.venv/bin:$PATH"
 COPY docker/fastapi_app/entrypoint.sh /usr/scripts/
 RUN chmod +x /usr/scripts/entrypoint.sh
 
-COPY ./fastapi-app/src/ .
+COPY ./fastapi-app/src/ ./src/
 
-WORKDIR /usr/app/fastapi_app/
+WORKDIR /usr/app/src/
 
 ENTRYPOINT ["/usr/scripts/entrypoint.sh"]

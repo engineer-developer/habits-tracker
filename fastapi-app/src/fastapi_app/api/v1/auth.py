@@ -1,12 +1,11 @@
 """Модуль роутов аутентификации."""
-from fastapi.params import Depends
 
-from dependencies.auth import DepsAuthService, get_current_user_telegram_id, DepsCurrentUserTelegramId
 from dependency_injector.wiring import inject
 from fastapi.routing import APIRouter
-from schemas.auth import TokenDto
-from schemas import UserCredentials
-from schemas.users import UserCreateCommand
+
+from fastapi_app.dependencies.auth import DepsAuthService
+from fastapi_app.schemas.auth import TokenDto
+from fastapi_app.schemas.users import UserCreateCommand, UserCredentials
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
