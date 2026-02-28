@@ -6,7 +6,7 @@ from pathlib import Path
 import loguru
 
 LOG_LEVEL = "DEBUG"
-FORMAT = "LOGGER - {time:YYYY-MM-DD HH:mm:ss.SSS} - {level} - {module} - {message}"
+FORMAT = "LOGGER [{level}] - {time:YYYY-MM-DD HH:mm:ss.SSS} - {module} - {message}"
 
 
 loguru.logger.remove()
