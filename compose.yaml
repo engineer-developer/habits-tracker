@@ -37,7 +37,7 @@ services:
     depends_on:
       - postgres
     command: >
-      uv run uvicorn --app-dir=/usr/app/src/ fastapi_app.main:app --host 0.0.0.0 --port ${APP__PORT}
+      uv run uvicorn loader:app --host 0.0.0.0 --port ${APP__PORT}
     develop:
       watch:
         - action: sync+restart
