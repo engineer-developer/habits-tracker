@@ -11,7 +11,7 @@ from alembic import context
 from os.path import dirname, abspath
 import sys
 
-sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
+sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 # Импорт моделей
 import fastapi_app.models
