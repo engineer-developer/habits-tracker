@@ -10,8 +10,8 @@ from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from tg_bot.schemas.habit_schema import HabitDataDto
-from tg_bot.service_layer.logging_service import logger
+from schemas.habits import HabitDataDto
+from services.logging_service import logger
 
 
 @dataclass

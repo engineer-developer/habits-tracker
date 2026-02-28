@@ -6,15 +6,15 @@ from typing import Callable
 import loguru
 from pydantic import ValidationError
 
-from tg_bot.schemas.habit_schema import HabitAddDto, HabitDataDto
-from tg_bot.service_layer.logging_service import logger
-from tg_bot.service_layer.redis_service import RedisService, redis_service
-from tg_bot.service_layer.request_service import (
+from schemas.habits import HabitAddDto, HabitDataDto
+from services.logging_service import logger
+from services.redis_service import RedisService, redis_service
+from services.request_service import (
     RequestService,
     TokenAuthSessionStrategy,
     requests_service,
 )
-from tg_bot.service_layer.scheduler_service import SchedulerService, scheduler_service
+from services.scheduler_service import SchedulerService, scheduler_service
 
 
 @dataclass

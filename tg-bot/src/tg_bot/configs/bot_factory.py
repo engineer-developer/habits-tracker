@@ -4,7 +4,7 @@ from telebot import TeleBot, custom_filters
 from telebot.storage import StateRedisStorage
 from telebot.types import BotCommand
 
-from tg_bot.core.config import settings
+from .app_config import settings
 
 
 redis_storage = StateRedisStorage(

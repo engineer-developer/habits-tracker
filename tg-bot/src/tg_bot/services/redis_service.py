@@ -6,9 +6,10 @@ from typing import Optional
 
 import redis
 
-from tg_bot.core.config import settings
+from configs import get_settings
 
 TOKEN_EXPIRED_TIME = datetime.timedelta(minutes=30)
+settings = get_settings()
 
 
 class RedisService:

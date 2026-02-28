@@ -5,6 +5,22 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+
+class UserLoginSchema(BaseModel):
+    """Схема аутентификации пользователя."""
+
+    telegram_id: int
+    password: str
+
+
+
+class UserRegisterSchema(BaseModel):
+    """Схема регистрации пользователя."""
+
+    password: str
+
+# TODO: Удалить старые схемы
+
 class UserIdSchema(BaseModel):
     """Базовая схема пользователя."""
 
@@ -19,14 +35,7 @@ class UserExtendSchema(UserIdSchema):
     username: Optional[str] = None
 
 
-class UserRegisterSchema(UserExtendSchema):
-    """Схема регистрации пользователя."""
-
-    password: str
 
 
-class UserLoginSchema(BaseModel):
-    """Схема аутентификации пользователя."""
 
-    username: str
-    password: str
+

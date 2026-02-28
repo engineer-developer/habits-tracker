@@ -1,7 +1,6 @@
 """Модуль взаимодействия с backend API."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Optional
 
 import loguru
@@ -9,9 +8,9 @@ import requests
 from requests import Response
 from requests.exceptions import RequestException
 
-from tg_bot.core.config import settings
-from tg_bot.schemas.habit_schema import HabitAddDto
-from tg_bot.service_layer.logging_service import logger
+from configs import settings
+from schemas.habits import HabitAddDto
+from services.logging_service import logger
 
 
 class SessionStrategy(ABC):

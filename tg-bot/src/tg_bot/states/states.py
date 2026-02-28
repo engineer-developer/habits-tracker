@@ -1,9 +1,6 @@
 """Модуль состояний."""
 
-from telebot.states import State, StatesGroup
-from telebot.storage import StateRedisStorage
-
-from tg_bot.core.config import settings
+from aiogram.fsm.state import StatesGroup, State
 
 
 class AuthStates(StatesGroup):
@@ -20,6 +17,3 @@ class HabitAddStates(StatesGroup):
     wait_for_habit_description = State()
     wait_for_habit_remind_time = State()
     wait_for_habit_remind_quantity = State()
-
-
-

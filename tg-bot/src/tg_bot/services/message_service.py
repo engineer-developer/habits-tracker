@@ -6,13 +6,13 @@ import loguru
 from pydantic import ValidationError
 from telebot import TeleBot
 
-from tg_bot.core.bot_factory import bot
-from tg_bot.keyboards.kb_factory import kb_confirm_habit_completed
-from tg_bot.schemas.habit_schema import HabitDataDto
-from tg_bot.service_layer.logging_service import logger
-from tg_bot.service_layer.redis_service import RedisService, redis_service
-from tg_bot.service_layer.request_service import requests_service, NoAuthSessionStrategy
-from tg_bot.service_layer.scheduler_service import scheduler_service
+from configs.bot_factory import bot
+from keyboards.kb_factory import kb_confirm_habit_completed
+from schemas.habits import HabitDataDto
+from services.logging_service import logger
+from services.redis_service import RedisService, redis_service
+from services.request_service import requests_service, NoAuthSessionStrategy
+from services.scheduler_service import scheduler_service
 
 
 def calculate_left_remind_quantity(habit_info: dict) -> int | bool:

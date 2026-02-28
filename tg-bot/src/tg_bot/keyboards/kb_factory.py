@@ -1,53 +1,45 @@
 """Модуль генерации keyboards."""
 
-from telebot.types import (
+from aiogram.utils.keyboard import (
+    InlineKeyboardBuilder,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    KeyboardButton,
-    ReplyKeyboardMarkup,
+)
+
+from tg_bot.callbacks.auth import AuthCallback, AuthMethod
+
+loging_button = InlineKeyboardButton(
+    text=AuthMethod.login.value,
+    callback_data=AuthCallback(method=AuthMethod.login).pack(),
+)
+register_button = InlineKeyboardButton(
+    text=AuthMethod.register.value,
+    callback_data=AuthCallback(method=AuthMethod.register).pack(),
 )
 
 
-def kb_start() -> ReplyKeyboardMarkup:
-    """Получаем стартовую клавиатуру."""
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(KeyboardButton(text="/start"))
-    return keyboard
-
-
-def kb_login() -> InlineKeyboardMarkup:
+def kb_login() -> InlineKeyboardBuilder:
     """Получаем login клавиатуру."""
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(InlineKeyboardButton(text="Войти", callback_data="cb_login"))
-    return keyboard
+    builder = InlineKeyboardBuilder()
+    builder.add(loging_button)
+    return builder
 
 
-def kb_register() -> InlineKeyboardMarkup:
+def kb_register() -> InlineKeyboardBuilder:
     """Получаем register клавиатуру."""
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton(
-            text="Зарегистрироваться",
-            callback_data="cb_register",
-        )
-    )
-    return keyboard
+    builder = InlineKeyboardBuilder()
+    builder.add(register_button)
+    return builder
 
 
-def kb_login_or_register() -> InlineKeyboardMarkup:
+def kb_login_or_register() -> InlineKeyboardBuilder:
     """Получаем login or register клавиатуру."""
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton(
-            text="Войти",
-            callback_data="cb_login",
-        ),
-        InlineKeyboardButton(
-            text="Зарегистрироваться",
-            callback_data="cb_register",
-        ),
+    builder = InlineKeyboardBuilder()
+    builder.add(
+        loging_button,
+        register_button,
     )
-    return keyboard
+    return builder
 
 
 def kb_profile() -> InlineKeyboardMarkup:
