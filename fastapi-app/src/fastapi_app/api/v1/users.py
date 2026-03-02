@@ -2,12 +2,14 @@
 
 from typing import Annotated
 
-from fastapi_app.dependencies.auth import get_current_user_telegram_id
-from fastapi_app.dependencies.users import DepsUserService
 from dependency_injector.wiring import inject
 from fastapi import Depends, status
 from fastapi.routing import APIRouter
-from fastapi_app.schemas.users import UserRead
+
+from fastapi_app.dependencies.auth import get_current_user_telegram_id
+from fastapi_app.dependencies.users import DepsUserService
+from fastapi_app.schemas.users import UserRead, UserByTelegramIdQuery
+from fastapi_app.configs.loguru_config import logger
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -28,7 +30,9 @@ async def get_user(
     user_service: DepsUserService,
 ) -> UserRead:
     """Получаем профиль активного пользователя."""
-    user = await user_service.get_current_active_user(telegram_id)
+    user = await user_service.get_current_active_user(
+        query=UserByTelegramIdQuery(telegram_id=telegram_id)
+    )
     return user
 
 

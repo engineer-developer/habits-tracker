@@ -1,8 +1,12 @@
 from dependency_injector import containers, providers
 
 from fastapi_app.database.database import Database
+from fastapi_app.repositories.habits import HabitRepository
+from fastapi_app.repositories.tracking import TrackingRepository
 from fastapi_app.repositories.users import UserRepository
 from fastapi_app.services.auth import AuthService
+from fastapi_app.services.habits import HabitService
+from fastapi_app.services.tracking import TrackingService
 from fastapi_app.services.users import UserService
 
 
@@ -26,9 +30,29 @@ class AppContainer(containers.DeclarativeContainer):
         session_factory=db.provided.session,
     )
 
+    habit_repository = providers.Factory(
+        HabitRepository,
+        session_factory=db.provided.session,
+    )
+    tracking_repository = providers.Factory(
+        TrackingRepository,
+        session_factory=db.provided.session,
+    )
+
     user_service = providers.Factory(
         UserService,
         repository=user_repository,
+    )
+
+    habit_service = providers.Factory(
+        HabitService,
+        repository=habit_repository,
+    )
+
+    tracking_service = providers.Factory(
+        TrackingService,
+        repository=tracking_repository,
+        habit_service=habit_service,
     )
 
     auth_service = providers.Factory(

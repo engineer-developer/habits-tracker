@@ -5,8 +5,12 @@ from pwdlib import PasswordHash
 from pydantic import SecretStr
 
 from fastapi_app.exceptions.services import InvalidPasswordException
-from fastapi_app.schemas.auth import TokenDto
-from fastapi_app.schemas.users import UserCreateCommand, UserCredentials
+from fastapi_app.schemas.auth import TokenRead
+from fastapi_app.schemas.users import (
+    UserByTelegramIdQuery,
+    UserCreateCommand,
+    UserCredentials,
+)
 from fastapi_app.services.users import UserService
 
 password_hash = PasswordHash.recommended()
@@ -21,18 +25,19 @@ class AuthService:
         algorithm: str,
         access_token_expire_minutes: int,
         user_service: UserService,
-    ):
+    ) -> None:
         self.secret_key = secret_key
         self.algorithm = algorithm
         self.access_token_expire_minutes = access_token_expire_minutes
         self.user_service = user_service
 
-    async def get_password_hash(self, password: str) -> str:
+    @staticmethod
+    async def get_password_hash(password: str) -> str:
         """Получаем хэшированный пароль."""
         return password_hash.hash(password)
 
+    @staticmethod
     async def verify_password(
-        self,
         plain_password: str,
         hashed_password: str,
     ) -> bool:
@@ -55,7 +60,7 @@ class AuthService:
         )
         return jwt_token
 
-    async def register_user(self, cmd: UserCreateCommand) -> TokenDto:
+    async def register_user(self, cmd: UserCreateCommand) -> TokenRead:
         """Метод регистрации пользователя."""
         hashed_password = await self.get_password_hash(cmd.password)
         cmd.password = hashed_password
@@ -66,15 +71,15 @@ class AuthService:
             data=payload,
             expires_delta=timedelta(minutes=self.access_token_expire_minutes),
         )
-        return TokenDto(access_token=access_token)
+        return TokenRead(access_token=access_token)
 
     async def sign_in(
         self,
         credentials: UserCredentials,
-    ):
+    ) -> TokenRead:
         """Метод входа в систему."""
         user = await self.user_service.get_current_active_user_with_password(
-            credentials.telegram_id
+            query=UserByTelegramIdQuery(telegram_id=credentials.telegram_id)
         )
 
         isvalid_password = await self.verify_password(
@@ -82,11 +87,11 @@ class AuthService:
             user.password.get_secret_value(),
         )
         if not isvalid_password:
-            raise InvalidPasswordException()
+            raise InvalidPasswordException
 
         payload = {"sub": str(credentials.telegram_id)}
         access_token = await self.create_jwt_token(
             data=payload,
             expires_delta=timedelta(minutes=self.access_token_expire_minutes),
         )
-        return TokenDto(access_token=access_token)
+        return TokenRead(access_token=access_token)

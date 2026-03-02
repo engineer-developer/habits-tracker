@@ -1,9 +1,9 @@
 """Модуль получения настроек из переменных окружения."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Self
 
-from pydantic import BaseModel, Field, SecretStr, model_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
@@ -38,7 +38,7 @@ class DatabaseSettings(BaseModel):
     dsn: Optional[URL] = Field(default=None, init=False)
 
     @model_validator(mode="after")
-    def calculate_dsn(self):
+    def calculate_dsn(self) -> Self:
         """DSN базы данных."""
         self.dsn = URL.create(
             drivername="postgresql+asyncpg",

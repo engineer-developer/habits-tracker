@@ -1,6 +1,7 @@
 """Модуль базы данных."""
 
 from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 import sqlalchemy
 from pydantic import SecretStr
@@ -30,8 +31,7 @@ class Database:
             port=port,
             database=database,
         ).render_as_string(hide_password=False)
-        print(url)
-        self._engine: AsyncEngine = create_async_engine(url=url, echo=True)
+        self._engine: AsyncEngine = create_async_engine(url=url, echo=False)
         self._session_factory = async_sessionmaker(
             bind=self._engine,
             expire_on_commit=False,
@@ -40,7 +40,7 @@ class Database:
         )
 
     @asynccontextmanager
-    async def session(self):
+    async def session(self) -> AsyncIterator[AsyncSession]:
         session = self._session_factory()
         try:
             yield session

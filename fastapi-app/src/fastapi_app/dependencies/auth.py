@@ -33,13 +33,13 @@ async def get_jwt_payload(
             algorithms=[settings.auth.algorithm],
         )
     except jwt.ExpiredSignatureError:
-        raise TokenExpired()
-    except jwt.InvalidTokenError as exc:
-        raise TokenInvalid(detail=str(exc))
+        raise TokenExpired
+    except jwt.InvalidTokenError:
+        raise TokenInvalid
 
     sub = payload.get("sub")
     if sub is None:
-        raise TokenDataLoss()
+        raise TokenDataLoss
 
     return payload
 
@@ -54,5 +54,11 @@ async def get_current_user_telegram_id(
     return telegram_id
 
 
-DepsCurrentUserTelegramId = Annotated[int, Depends(get_current_user_telegram_id)]
-DepsAuthService = Annotated[AuthService, Depends(Provide[AppContainer.auth_service])]
+DepsCurrentUserTelegramId = Annotated[
+    int,
+    Depends(get_current_user_telegram_id),
+]
+DepsAuthService = Annotated[
+    AuthService,
+    Depends(Provide[AppContainer.auth_service]),
+]
