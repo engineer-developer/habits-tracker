@@ -8,8 +8,7 @@ from fastapi.routing import APIRouter
 
 from fastapi_app.dependencies.auth import get_current_user_telegram_id
 from fastapi_app.dependencies.users import DepsUserService
-from fastapi_app.schemas.users import UserRead, UserByTelegramIdQuery
-from fastapi_app.configs.loguru_config import logger
+from fastapi_app.schemas.users import UserByTelegramIdQuery, UserRead
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -36,29 +35,29 @@ async def get_user(
     return user
 
 
-@router.get(
-    "",
-    response_model=list[UserRead],
-    status_code=status.HTTP_200_OK,
-)
-@inject
-async def get_all_users(
-    user_service: DepsUserService,
-) -> list[UserRead]:
-    """Получаем всех пользователей."""
-    users = await user_service.get_all_users()
-    return users
+# @router.get(
+#     "",
+#     response_model=list[UserRead],
+#     status_code=status.HTTP_200_OK,
+# )
+# @inject
+# async def get_all_users(
+#     user_service: DepsUserService,
+# ) -> list[UserRead]:
+#     """Получаем всех пользователей."""
+#     users = await user_service.get_all_users()
+#     return users
 
 
-@router.get(
-    "/active",
-    response_model=list[UserRead],
-    status_code=status.HTTP_200_OK,
-)
-@inject
-async def get_all_active_users(
-    user_service: DepsUserService,
-) -> list[UserRead]:
-    """Получаем всех активных пользователей."""
-    active_users = await user_service.get_all_active_users()
-    return active_users
+# @router.get(
+#     "/active",
+#     response_model=list[UserRead],
+#     status_code=status.HTTP_200_OK,
+# )
+# @inject
+# async def get_all_active_users(
+#     user_service: DepsUserService,
+# ) -> list[UserRead]:
+#     """Получаем всех активных пользователей."""
+#     active_users = await user_service.get_all_active_users()
+#     return active_users

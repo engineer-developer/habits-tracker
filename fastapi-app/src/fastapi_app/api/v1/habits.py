@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from dependency_injector.wiring import inject
-from fastapi import status, Query, Path
+from fastapi import Path, Query, status
 from fastapi.routing import APIRouter
 
 from fastapi_app.dependencies.auth import (
@@ -12,14 +12,14 @@ from fastapi_app.dependencies.auth import (
 from fastapi_app.dependencies.habit import DepsHabitService
 from fastapi_app.dependencies.users import DepsUserService
 from fastapi_app.schemas.habits import (
-    HabitRead,
-    HabitCreateCommand,
-    HabitByUserIdQuery,
     HabitByIdQuery,
-    HabitUpdateCommand,
+    HabitByUserIdQuery,
+    HabitCreateCommand,
     HabitDeleteCommand,
+    HabitRead,
+    HabitUpdateCommand,
 )
-
+from fastapi_app.schemas.users import UserByTelegramIdQuery
 
 router = APIRouter(prefix="/habits", tags=["habits"])
 
@@ -37,7 +37,9 @@ async def create_habit(
     cmd: HabitCreateCommand,
 ) -> HabitRead:
     """Роут для создания привычки."""
-    user = await user_service.get_user_by_telegram_id(telegram_id)
+    user = await user_service.get_user_by_telegram_id(
+        query=UserByTelegramIdQuery(telegram_id=telegram_id)
+    )
     cmd.user_id = user.id
     habit = await habit_service.add_habit(cmd)
     return habit
