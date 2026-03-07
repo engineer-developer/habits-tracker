@@ -1,12 +1,24 @@
 """Модуль запуска бота."""
 
-
+from aiogram import Bot
 from aiogram.types import BotCommand
 
 from tg_bot.configs.app_config import get_settings
 from tg_bot.configs.loguru_config import logger
 from tg_bot.containers.app_container import AppContainer
 from tg_bot.handlers import router as main_router
+
+app_context = {}
+
+
+async def setup_bot(bot: Bot):
+    """Настройка бота."""
+    await bot.set_my_commands(
+        commands=[
+            BotCommand(command="start", description="Профиль пользователя"),
+            BotCommand(command="cancel", description="Отмена"),
+        ]
+    )
 
 
 async def main() -> None:
@@ -16,20 +28,17 @@ async def main() -> None:
     container.config.from_pydantic(settings)
     await container.init_resources()
 
-    # scheduler = container.scheduler()
-    redis_service = await container.redis_service()
+    app_context.update(container=container)
     api_service = await container.api_service()
-
+    redis_service = await container.redis_service()
+    scheduler_service = await container.scheduler_service()
     bot = await container.telegram_bot()
-    await bot.set_my_commands(
-        commands=[
-            BotCommand(command="start", description="Профиль пользователя"),
-            BotCommand(command="cancel", description="Отмена"),
-        ]
-    )
+    await setup_bot(bot)
+
     dp = await container.dispatcher(
-        redis_service=redis_service,
         api_service=api_service,
+        redis_service=redis_service,
+        scheduler_service=scheduler_service,
     )
     dp.include_router(main_router)
 
@@ -37,4 +46,5 @@ async def main() -> None:
     await dp.start_polling(bot)
     logger.debug("Stop bot.")
 
+    await bot.session.close()
     await container.shutdown_resources()

@@ -32,6 +32,14 @@ class BaseUser(BaseDtoModel):
     """Базовая схема пользователя."""
 
 
+# Commands
+class UserCredentials(BaseUser):
+    """Схема данных аутентификации."""
+
+    telegram_id: int = UserFields.telegram_id
+    password: str = UserFields.password
+
+
 class UserCreateCommand(BaseUser):
     """Схема создания пользователя."""
 
@@ -42,13 +50,20 @@ class UserCreateCommand(BaseUser):
     password: str = UserFields.password
 
 
-class UserCredentials(BaseUser):
-    """Схема данных аутентификации."""
+# Queries
+class UserByIdQuery(BaseUser):
+    """Схема запроса пользователя по id"""
+
+    id: int = UserFields.id
+
+
+class UserByTelegramIdQuery(BaseUser):
+    """Схема запроса пользователя по telegram_id"""
 
     telegram_id: int = UserFields.telegram_id
-    password: str = UserFields.password
 
 
+# Output
 class UserRead(BaseUser):
     """Получаем ответ с данными пользователя."""
 
@@ -69,7 +84,3 @@ class UserReadWithPassword(UserRead):
     """Получаем данные пользователя."""
 
     password: SecretStr = UserFields.password
-
-
-class UserTelegramIdQuery(BaseUser):
-    telegram_id: int = UserFields.telegram_id

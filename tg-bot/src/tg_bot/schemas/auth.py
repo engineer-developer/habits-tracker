@@ -5,7 +5,7 @@ from pydantic import Field
 from .base import BaseDtoModel
 
 
-class TokenDto(BaseDtoModel):
+class TokenRead(BaseDtoModel):
     """Схема токена доступа."""
 
     access_token: str = Field(

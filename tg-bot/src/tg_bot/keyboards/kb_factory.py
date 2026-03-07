@@ -4,9 +4,19 @@ from aiogram.utils.keyboard import (
     InlineKeyboardBuilder,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    ReplyKeyboardBuilder
 )
 
 from tg_bot.callbacks.auth import AuthCallback, AuthMethod
+from tg_bot.callbacks.habits import (
+    HabitListCallback,
+    HabitAction,
+    HabitAddConfirmCallback,
+    HabitAddConfirmAction,
+    HabitMarkCompletedCallback,
+    HabitMarkCompletedAction,
+)
+from tg_bot.callbacks.user_profile import ProfileAction, ProfileMenuCallback
 
 loging_button = InlineKeyboardButton(
     text=AuthMethod.login.value,
@@ -18,104 +28,81 @@ register_button = InlineKeyboardButton(
 )
 
 
-def kb_login() -> InlineKeyboardBuilder:
+def kb_login() -> InlineKeyboardMarkup:
     """Получаем login клавиатуру."""
     builder = InlineKeyboardBuilder()
     builder.add(loging_button)
-    return builder
+    return builder.as_markup()
 
 
-def kb_register() -> InlineKeyboardBuilder:
+def kb_register() -> InlineKeyboardMarkup:
     """Получаем register клавиатуру."""
     builder = InlineKeyboardBuilder()
     builder.add(register_button)
-    return builder
+    return builder.as_markup()
 
 
-def kb_login_or_register() -> InlineKeyboardBuilder:
+def kb_login_or_register() -> InlineKeyboardMarkup:
     """Получаем login or register клавиатуру."""
     builder = InlineKeyboardBuilder()
     builder.add(
         loging_button,
         register_button,
     )
-    return builder
+    return builder.as_markup()
 
 
 def kb_profile() -> InlineKeyboardMarkup:
     """Клавиатура профиля пользователя."""
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.row(
-        InlineKeyboardButton(
-            text="➕ Список привычек",
-            callback_data="menu_habits_list",
-        ),
-        InlineKeyboardButton(
-            text="➕ Добавить привычку",
-            callback_data="menu_add_habit",
-        ),
-    )
-    keyboard.row(
-        InlineKeyboardButton(
-            text="⚙ Редактировать",
-            callback_data="menu_edit_habit",
-        ),
-        InlineKeyboardButton(
-            text="❌ Удалить",
-            callback_data="menu_remove_habit",
-        ),
-    )
-    keyboard.row(
-        InlineKeyboardButton(
-            text="✅ Выполнить",
-            callback_data="menu_mark_habit_complete",
-        ),
-        InlineKeyboardButton(
-            text="📊 Статистика",
-            callback_data="menu_habit_stat",
-        ),
-    )
-    return keyboard
-
-
-def kb_habits_list(habits: list[dict]):
-    """Клавиатура списка привычек."""
-    keyboard = InlineKeyboardMarkup(row_width=3)
-    for habit in habits:
-        keyboard.add(
-            InlineKeyboardButton(
-                text=f"🔹{habit.get('name')}",
-                callback_data=f"habits:view:{habit.get('id')}",
-            ),
-            InlineKeyboardButton(
-                text="✅ Выполнено",
-                callback_data=f"habits:edit:{habit.get('id')}",
-            ),
-            InlineKeyboardButton(
-                text="⚙ Изменить",
-                callback_data=f"habits:edit:{habit.get('id')}",
-            ),
+    builder = InlineKeyboardBuilder()
+    for action in ProfileAction:
+        builder.button(
+            text=action.value,
+            callback_data=ProfileMenuCallback(action=action),
         )
-    return keyboard
+    builder.adjust(2, repeat=True)
+    return builder.as_markup()
 
 
-def kb_habit_add_or_cancel():
+def kb_habits_list(habits: list[dict]) -> InlineKeyboardMarkup:
+    """Клавиатура списка привычек."""
+    builder = InlineKeyboardBuilder()
+    for habit in habits:
+        builder.button(
+            text=f"🔹{habit.get('name')}",
+        )
+        for action in HabitAction:
+            builder.button(
+                text=action.value,
+                callback_data=HabitListCallback(
+                    action=action,
+                    habit_id=habit.get("id"),
+                ),
+            )
+    builder.adjust(3)
+    return builder.as_markup()
+
+
+def kb_habit_add_or_cancel() -> InlineKeyboardMarkup:
     """Клавиатура подтверждения добавления привычки или отмены."""
-    keyboard = InlineKeyboardMarkup(row_width=2)
-    keyboard.add(
-        InlineKeyboardButton(text="✅ Добавить", callback_data="cb_confirm_add_habit"),
-        InlineKeyboardButton(text="❌ Отменить", callback_data="cb_cancel_add_habit"),
-    )
-    return keyboard
+    builder = InlineKeyboardBuilder()
+    for action in HabitAddConfirmAction:
+        builder.button(
+            text=action.value,
+            callback_data=HabitAddConfirmCallback(action=action),
+        )
+    return builder.as_markup()
 
 
-def kb_confirm_habit_completed(habit_name):
+def kb_confirm_habit_completed(habit_id) -> InlineKeyboardMarkup:
     """Клавиатура подтверждения выполнения привычки."""
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton(
-            text="✅ Подтвердить выполнение",
-            callback_data=f"cb_confirm_habit_done:{habit_name}",
+    action = HabitMarkCompletedAction.mark_completed
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=action.value,
+        callback_data=HabitMarkCompletedCallback(
+            action=action,
+            habit_id=habit_id,
         ),
     )
-    return keyboard
+    return builder.as_markup()

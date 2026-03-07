@@ -1,22 +1,23 @@
-from aiogram.dispatcher.router import Router
+"""Обработчик регистрации пользователя."""
+
 from aiogram import F
+from aiogram.dispatcher.router import Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.types.callback_query import CallbackQuery
-from aiogram.fsm.context import FSMContext
 
 from tg_bot.callbacks.auth import AuthCallback, AuthMethod
 from tg_bot.keyboards.kb_factory import kb_login
-from tg_bot.new_services.api import ApiService
-from tg_bot.new_services.redis import RedisService
+from tg_bot.services.api import ApiService
+from tg_bot.services.redis import RedisService
 from tg_bot.schemas.users import UserCreateCommand
 from tg_bot.states.states import AuthStates
-
 
 router = Router(name="register")
 
 
 @router.callback_query(AuthCallback.filter(F.method == AuthMethod.register))
-async def register_user(callback: CallbackQuery, state: FSMContext):
+async def register_user(callback: CallbackQuery, state: FSMContext) -> None:
     """Начинаем флоу регистрации."""
     await state.set_state(AuthStates.wait_password_for_register)
     await callback.answer()
@@ -29,7 +30,7 @@ async def get_password_for_register(
     state: FSMContext,
     api_service: ApiService,
     redis_service: RedisService,
-):
+) -> None:
     """Получаем пароль и регистрируем пользователя через api."""
     password = message.text
     user = UserCreateCommand(
@@ -41,19 +42,18 @@ async def get_password_for_register(
     )
 
     token = await api_service.register(user)
-    if token:
-        await redis_service.save_token(
-            telegram_id=message.from_user.id,
-            value=token,
-        )
+    if not token:
         await message.answer(
-            text="Вы успешно зарегистрированы.\nПожалуйста войдите в систему",
-            reply_markup=kb_login().as_markup(),
+            "Не удалось зарегистрировать пользователя.\nНажмите /start"
         )
-        await state.clear()
         return
 
-    await message.answer(
-        "Не удалось зарегистрировать пользователя.\n"
-        "Нажмите /start"
+    await redis_service.save_token(
+        telegram_id=message.from_user.id,
+        value=token,
     )
+    await message.answer(
+        text="Вы успешно зарегистрированы.\nПожалуйста войдите в систему",
+        reply_markup=kb_login(),
+    )
+    await state.clear()

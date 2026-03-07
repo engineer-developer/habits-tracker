@@ -5,9 +5,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dependency_injector import containers, providers
 from redis.asyncio import client
 
-from tg_bot.new_services.api import ApiService
-from tg_bot.new_services.redis import RedisService
-from tg_bot.new_services.scheduler import SchedulerService
+from tg_bot.services.api import ApiService
+from tg_bot.services.redis import RedisService
+from tg_bot.services.scheduler import SchedulerService
 
 
 class AppContainer(containers.DeclarativeContainer):
@@ -24,6 +24,7 @@ class AppContainer(containers.DeclarativeContainer):
     redis_storage = providers.Resource(
         RedisStorage,
         redis=redis_client,
+        # key_builder=DefaultKeyBuilder(with_destiny=True),
     )
 
     http_client = providers.Resource(
@@ -45,15 +46,21 @@ class AppContainer(containers.DeclarativeContainer):
 
     @staticmethod
     async def _init_scheduler():
-        scheduler = AsyncIOScheduler(timezone="UTC")
+        scheduler = AsyncIOScheduler()
+        scheduler.add_jobstore(
+            "redis",
+            jobs_key="jobs",
+            run_times_key="run_times",
+        )
         scheduler.start()
-        try:
-            yield scheduler
-        finally:
-            scheduler.shutdown()
+        return scheduler
 
     scheduler = providers.Resource(_init_scheduler)
 
+    scheduler_service = providers.Factory(
+        SchedulerService,
+        scheduler=scheduler,
+    )
     redis_service = providers.Factory(
         RedisService,
         client=redis_client,
@@ -62,9 +69,4 @@ class AppContainer(containers.DeclarativeContainer):
     api_service = providers.Factory(
         ApiService,
         client=http_client,
-    )
-
-    scheduler_service = providers.Factory(
-        SchedulerService,
-        scheduler=scheduler,
     )
