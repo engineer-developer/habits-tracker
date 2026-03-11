@@ -1,5 +1,7 @@
 import httpx
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.base import DefaultKeyBuilder
+from aiogram.fsm.storage.memory import SimpleEventIsolation, DisabledEventIsolation
 from aiogram.fsm.storage.redis import RedisStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dependency_injector import containers, providers
@@ -24,7 +26,7 @@ class AppContainer(containers.DeclarativeContainer):
     redis_storage = providers.Resource(
         RedisStorage,
         redis=redis_client,
-        # key_builder=DefaultKeyBuilder(with_destiny=True),
+        key_builder=DefaultKeyBuilder(with_destiny=True),
     )
 
     http_client = providers.Resource(
@@ -36,12 +38,6 @@ class AppContainer(containers.DeclarativeContainer):
     telegram_bot = providers.Resource(
         Bot,
         token=config.bot.token,
-    )
-
-    dispatcher = providers.Factory(
-        Dispatcher,
-        bot=telegram_bot,
-        storage=redis_storage,
     )
 
     @staticmethod
@@ -69,4 +65,13 @@ class AppContainer(containers.DeclarativeContainer):
     api_service = providers.Factory(
         ApiService,
         client=http_client,
+    )
+
+    dispatcher = providers.Factory(
+        Dispatcher,
+        storage=redis_storage,
+        bot=telegram_bot,
+        api_service=api_service,
+        redis_service=redis_service,
+        scheduler_service=scheduler_service,
     )

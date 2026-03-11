@@ -17,6 +17,8 @@ from tg_bot.callbacks.habits import (
     HabitMarkCompletedAction,
 )
 from tg_bot.callbacks.user_profile import ProfileAction, ProfileMenuCallback
+from tg_bot.schemas.habits import HabitRead
+
 
 loging_button = InlineKeyboardButton(
     text=AuthMethod.login.value,
@@ -64,22 +66,14 @@ def kb_profile() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-def kb_habits_list(habits: list[dict]) -> InlineKeyboardMarkup:
+def kb_habits_list(habits: list[HabitRead]) -> InlineKeyboardMarkup:
     """Клавиатура списка привычек."""
     builder = InlineKeyboardBuilder()
     for habit in habits:
         builder.button(
-            text=f"🔹{habit.get('name')}",
+            text=f"🔹{habit.title}", callback_data="test"
         )
-        for action in HabitAction:
-            builder.button(
-                text=action.value,
-                callback_data=HabitListCallback(
-                    action=action,
-                    habit_id=habit.get("id"),
-                ),
-            )
-    builder.adjust(3)
+    builder.adjust(1)
     return builder.as_markup()
 
 

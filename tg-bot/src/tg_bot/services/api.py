@@ -111,3 +111,11 @@ class ApiService:
         response.raise_for_status()
         tracking = TrackingRead.model_validate(response.json())
         return tracking
+
+    async def get_non_completed_habits(self, token: str):
+        url = f"{self.base_url}habits"
+        headers = {"Authorization": f"Bearer {token}"}
+        response = await self.client.get(url=url, headers=headers, timeout=5)
+        response.raise_for_status()
+        habits = [HabitRead.model_validate(habit) for habit in response.json()]
+        return habits

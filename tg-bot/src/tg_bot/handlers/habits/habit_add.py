@@ -1,24 +1,22 @@
-from datetime import time
 import re
+from datetime import time
 
-from aiogram.dispatcher.router import Router
 from aiogram import F
+from aiogram.dispatcher.router import Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from aiogram.utils.chat_action import ChatActionSender
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-
-from aiogram.fsm.context import FSMContext
-from aiogram.utils.chat_action import ChatActionSender
-
 from tg_bot.callbacks.habits import HabitAddConfirmAction, HabitAddConfirmCallback
-from tg_bot.callbacks.user_profile import ProfileMenuCallback, ProfileAction
+from tg_bot.callbacks.user_profile import ProfileAction, ProfileMenuCallback
 from tg_bot.configs.loguru_config import logger
 from tg_bot.handlers.main_menu import show_user_profile
 from tg_bot.keyboards.kb_factory import kb_habit_add_or_cancel
+from tg_bot.schemas.habits import HabitCreateCommand, HabitJobCreateCommand
 from tg_bot.services.api import ApiService
 from tg_bot.services.redis import RedisService
 from tg_bot.services.scheduler import SchedulerService
-from tg_bot.schemas.habits import HabitCreateCommand, HabitJobCreateCommand
 from tg_bot.states.states import HabitAddStates
 from tg_bot.utils.notify import send_notify
 

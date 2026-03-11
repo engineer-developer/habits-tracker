@@ -1,12 +1,15 @@
 """Модуль запуска бота."""
 
 from aiogram import Bot
+from aiogram.fsm.scene import SceneRegistry
 from aiogram.types import BotCommand
 
 from tg_bot.configs.app_config import get_settings
 from tg_bot.configs.loguru_config import logger
 from tg_bot.containers.app_container import AppContainer
-from tg_bot.handlers import router as main_router
+from tg_bot.scenes import scenes
+
+# from tg_bot.handlers import router as main_router
 
 app_context = {}
 
@@ -29,18 +32,14 @@ async def main() -> None:
     await container.init_resources()
 
     app_context.update(container=container)
-    api_service = await container.api_service()
-    redis_service = await container.redis_service()
-    scheduler_service = await container.scheduler_service()
+
     bot = await container.telegram_bot()
     await setup_bot(bot)
 
-    dp = await container.dispatcher(
-        api_service=api_service,
-        redis_service=redis_service,
-        scheduler_service=scheduler_service,
-    )
-    dp.include_router(main_router)
+    dp = await container.dispatcher()
+    # dp.include_router(main_router)
+    scene_registry = SceneRegistry(dp)
+    scene_registry.add(*scenes)
 
     logger.debug("Start bot.")
     await dp.start_polling(bot)
