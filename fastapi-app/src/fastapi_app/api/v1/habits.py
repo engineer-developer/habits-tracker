@@ -48,6 +48,11 @@ async def create_habit(
 @router.get(
     "",
     status_code=status.HTTP_200_OK,
+    description="""Роут для получения привычек пользователя.
+
+    По умолчанию отдает все невыполненные привычки.
+    Выполненные привычки отдает если передать query параметр completed=True.
+    """,
     response_model=list[HabitRead],
 )
 @inject
@@ -59,8 +64,10 @@ async def get_all_habits_of_user(
         default=False, description="Фильтр привычек по состоянию выполнения."
     ),
 ) -> list[HabitRead]:
-    """Роут для получения всех привычек пользователя."""
-    user = await user_service.get_user_by_telegram_id(telegram_id)
+    """Роут для получения привычек пользователя."""
+    user = await user_service.get_user_by_telegram_id(
+        query=UserByTelegramIdQuery(telegram_id=telegram_id)
+    )
     habits = await habit_service.get_all_habits_by_user_id(
         query=HabitByUserIdQuery(user_id=user.id),
         completed=completed,
