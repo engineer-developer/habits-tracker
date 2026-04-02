@@ -1,7 +1,9 @@
+"""Модуль """
+
+
 import httpx
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import DefaultKeyBuilder
-from aiogram.fsm.storage.memory import SimpleEventIsolation, DisabledEventIsolation
 from aiogram.fsm.storage.redis import RedisStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dependency_injector import containers, providers
@@ -13,6 +15,8 @@ from tg_bot.services.scheduler import SchedulerService
 
 
 class AppContainer(containers.DeclarativeContainer):
+    """Контейнер приложения."""
+
     config = providers.Configuration()
 
     redis_client = providers.Resource(
@@ -41,7 +45,7 @@ class AppContainer(containers.DeclarativeContainer):
     )
 
     @staticmethod
-    async def _init_scheduler():
+    async def _init_scheduler() -> AsyncIOScheduler:
         scheduler = AsyncIOScheduler()
         scheduler.add_jobstore(
             "redis",
@@ -57,6 +61,7 @@ class AppContainer(containers.DeclarativeContainer):
         SchedulerService,
         scheduler=scheduler,
     )
+
     redis_service = providers.Factory(
         RedisService,
         client=redis_client,

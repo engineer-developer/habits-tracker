@@ -3,8 +3,8 @@
 from datetime import datetime, time
 from typing import Optional
 
-from aiogram import Bot
-from pydantic import ConfigDict, Field, PositiveInt
+from pydantic import ConfigDict, Field, PositiveInt, field_validator
+
 
 from .base import BaseDtoModel
 from .tracking import TrackingRead
@@ -13,7 +13,7 @@ from .tracking import TrackingRead
 class HabitFields:
     """Поля привычки."""
 
-    id: int = Field(description="Идентификатор привычки", examples=[1])
+    id: PositiveInt = Field(description="Идентификатор привычки", examples=[1])
     title: str = Field(
         description="Название привычки", max_length=250, examples=["Тренировка"]
     )
@@ -30,11 +30,27 @@ class HabitFields:
     created_at: datetime = Field(
         description="Время создания", examples=[datetime.now()]
     )
-    user_id: int = Field(description="Идентификатор пользователя", examples=[2])
+    user_id: PositiveInt = Field(description="Идентификатор пользователя", examples=[2])
 
 
 class BaseHabit(BaseDtoModel):
     """Базовая схема привычки."""
+
+
+class HabitTitleInput(BaseHabit):
+    title: str = Field(max_length=250, pattern=r"^[А-ЯЁа-яёA-Za-z0-9 \-:]+$")
+
+
+class HabitDescriptionInput(BaseHabit):
+    description: str = Field(pattern=r"^[А-ЯЁа-яёA-Za-z0-9 \-:]+$")
+
+
+class HabitRemindTimeInput(BaseHabit):
+    remind_time: time = HabitFields.remind_time
+
+
+class HabitRemindQuantityInput(BaseHabit):
+    remind_quantity: PositiveInt = HabitFields.remind_quantity
 
 
 # Commands
@@ -44,25 +60,24 @@ class HabitCreateCommand(BaseHabit):
     title: str = HabitFields.title
     description: Optional[str] = HabitFields.description
     remind_time: time = HabitFields.remind_time
-    remind_quantity: int = HabitFields.remind_quantity
-    user_id: int = HabitFields.user_id
+    remind_quantity: PositiveInt = HabitFields.remind_quantity
+    user_id: PositiveInt = HabitFields.user_id
 
 
 class HabitUpdateCommand(BaseHabit):
     """Схема для изменения данных привычки."""
 
-    id: int = HabitFields.id
     title: Optional[str] = None
     description: Optional[str] = None
     remind_time: Optional[time] = None
-    remind_quantity: Optional[int] = None
+    remind_quantity: Optional[PositiveInt] = None
     completed: Optional[bool] = None
 
 
 class HabitDeleteCommand(BaseHabit):
     """Схема для удаления привычки."""
 
-    id: int = HabitFields.id
+    id: PositiveInt = HabitFields.id
 
 
 class HabitJobCreateCommand(BaseHabit):
@@ -70,25 +85,25 @@ class HabitJobCreateCommand(BaseHabit):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    habit_id: int = HabitFields.id
+    habit_id: PositiveInt = HabitFields.id
     title: str = HabitFields.title
     description: Optional[str] = HabitFields.description
     remind_time: time = HabitFields.remind_time
-    remind_quantity: int = HabitFields.remind_quantity
-    user_id: int = HabitFields.user_id
+    remind_quantity: PositiveInt = HabitFields.remind_quantity
+    user_id: PositiveInt = HabitFields.user_id
 
 
 # Queries
 class HabitByIdQuery(BaseHabit):
     """Схема для получения привычки по id"""
 
-    id: int = HabitFields.id
+    id: PositiveInt = HabitFields.id
 
 
 class HabitByUserIdQuery(BaseHabit):
     """Схема для получения привычки по user_id"""
 
-    user_id: int = HabitFields.user_id
+    user_id: PositiveInt = HabitFields.user_id
 
 
 # Output
@@ -97,11 +112,11 @@ class HabitRead(BaseHabit):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int = HabitFields.id
+    id: PositiveInt = HabitFields.id
     title: str = HabitFields.title
     description: Optional[str] = HabitFields.description
     remind_time: time = HabitFields.remind_time
-    remind_quantity: int = HabitFields.remind_quantity
+    remind_quantity: PositiveInt = HabitFields.remind_quantity
     completed: bool = HabitFields.completed
     created_at: datetime = HabitFields.created_at
 

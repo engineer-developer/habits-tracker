@@ -1,34 +1,29 @@
-from datetime import datetime, time
 import functools
-import json
-from typing import Optional, Callable
+from typing import Any, Callable, Coroutine, Optional
 
 import httpx
 from httpx import HTTPStatusError
 from pydantic import ValidationError
+from pydantic.v1 import PositiveInt
 
-from tg_bot.schemas.auth import TokenRead
-from tg_bot.schemas.base import BaseDtoModel
-from tg_bot.schemas.habits import HabitRead, HabitCreateCommand, HabitByIdQuery
-from tg_bot.schemas.tracking import TrackingCreateCommand, TrackingRead
-from tg_bot.schemas.users import UserCredentials, UserCreateCommand, UserRead
+from tg_bot import schemas
 from tg_bot.configs.loguru_config import logger
+from tg_bot.schemas import HabitRead
 
 
 def catch_exceptions(func: Callable):
     """Декоратор перехвата исключений."""
 
     @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: tuple[Any], **kwargs: dict[str, Any]):
         try:
-            result = await func(*args, **kwargs)
-            return result
+            return await func(*args, **kwargs)
         except HTTPStatusError as exc:
             logger.error(exc)
-            return
+            return None
         except ValidationError as exc:
             logger.error(exc)
-            return
+            return None
 
     return wrapper
 
@@ -39,43 +34,47 @@ class ApiService:
         self.base_url = self.client.base_url
 
     @catch_exceptions
-    async def register(self, cmd: UserCreateCommand) -> Optional[str]:
+    async def register(self, cmd: schemas.UserCreateCommand) -> Optional[str]:
         """Запрос для регистрации пользователя."""
         url = f"{self.base_url}auth/register"
         response = await self.client.post(url=url, json=cmd.model_dump(), timeout=5)
         response.raise_for_status()
-        payload = TokenRead.model_validate(response.json())
+        payload = schemas.TokenRead.model_validate(response.json())
         return payload.access_token
 
     @catch_exceptions
-    async def login(self, credentials: UserCredentials) -> Optional[str]:
+    async def login(self, credentials: schemas.UserCredentials) -> Optional[str]:
         """Запрос для входа в систему."""
         url = f"{self.base_url}auth/login"
         response = await self.client.post(
             url=url, json=credentials.model_dump(), timeout=5
         )
         response.raise_for_status()
-        payload = TokenRead.model_validate(response.json())
+        payload = schemas.TokenRead.model_validate(response.json())
         return payload.access_token
 
     @catch_exceptions
-    async def get_user_profile(self, token: str) -> Optional[UserRead]:
+    async def get_user_profile(self, token: str) -> Optional[schemas.UserRead]:
         """Запрос на получение данных пользователей."""
         url = f"{self.base_url}users/profile"
         headers = {"Authorization": f"Bearer {token}"}
         response = await self.client.get(url=url, headers=headers, timeout=5)
         response.raise_for_status()
-        user = UserRead.model_validate(response.json())
+        user = schemas.UserRead.model_validate(response.json())
+
+        if not user:
+            logger.error("Данные пользователя не получены.")
+            return None
+
         return user
 
     @catch_exceptions
-    async def habit_add(
-        self, token: str, cmd: HabitCreateCommand
-    ) -> Optional[HabitRead]:
+    async def create_habit(
+        self, token: str, cmd: schemas.HabitCreateCommand
+    ) -> Optional[schemas.HabitRead]:
         """Запрос на добавление новой привычки."""
         url = f"{self.base_url}habits"
         headers = {"Authorization": f"Bearer {token}"}
-        cmd.remind_time = cmd.remind_time
         response = await self.client.post(
             url=url,
             headers=headers,
@@ -83,22 +82,29 @@ class ApiService:
             timeout=5,
         )
         response.raise_for_status()
-        habit = HabitRead.model_validate(response.json())
+        habit = schemas.HabitRead.model_validate(response.json())
+        if not habit:
+            return None
         return habit
 
     @catch_exceptions
-    async def get_habit_by_id(self, query: HabitByIdQuery) -> Optional[HabitRead]:
+    async def get_habit_by_id(
+        self, query: schemas.HabitByIdQuery
+    ) -> Optional[schemas.HabitRead]:
         """Запрос на получение данных привычки"""
         url = f"{self.base_url}habits/{query.id}"
         response = await self.client.get(url=url, timeout=5)
         response.raise_for_status()
-        habit = HabitRead.model_validate(response.json())
+        habit = schemas.HabitRead.model_validate(response.json())
+        if not habit:
+            logger.error(f"Привычки с id={query.id} не найдено")
+            return None
         return habit
 
     @catch_exceptions
     async def add_tracking_of_habit(
-        self, token: str, cmd: TrackingCreateCommand
-    ) -> Optional[TrackingRead]:
+        self, token: str, cmd: schemas.TrackingCreateCommand
+    ) -> Optional[schemas.TrackingRead]:
         """Запрос на добавление отслеживания привычки."""
         url = f"{self.base_url}tracking"
         headers = {"Authorization": f"Bearer {token}"}
@@ -109,13 +115,82 @@ class ApiService:
             timeout=5,
         )
         response.raise_for_status()
-        tracking = TrackingRead.model_validate(response.json())
+        tracking = schemas.TrackingRead.model_validate(response.json())
         return tracking
 
-    async def get_non_completed_habits(self, token: str):
+    @catch_exceptions
+    async def get_habits(
+        self, token: str, completed: bool = False
+    ) -> Optional[list[HabitRead]]:
+        """Получает привычки.
+
+        :param token: Токен аутентификации.
+        :param completed: Статус завершенности привычки.
+        """
         url = f"{self.base_url}habits"
+        params = dict(completed=completed)
         headers = {"Authorization": f"Bearer {token}"}
-        response = await self.client.get(url=url, headers=headers, timeout=5)
+        response = await self.client.get(
+            url=url, params=params, headers=headers, timeout=5
+        )
         response.raise_for_status()
-        habits = [HabitRead.model_validate(habit) for habit in response.json()]
+        habits = [schemas.HabitRead.model_validate(habit) for habit in response.json()]
         return habits
+
+    async def get_non_completed_habits(self, token: str) -> Optional[list[HabitRead]]:
+        """Получает активные привычки."""
+        return await self.get_habits(token=token, completed=False)
+
+    async def get_completed_habits(self, token: str) -> Optional[list[HabitRead]]:
+        """Получает завершенные привычки."""
+        return await self.get_habits(token=token, completed=True)
+
+    @catch_exceptions
+    async def update_habit(
+        self,
+        token: str,
+        habit_id: PositiveInt,
+        cmd: schemas.HabitUpdateCommand,
+    ) -> Optional[HabitRead]:
+        url = f"{self.base_url}habits/{habit_id}"
+        headers = {"Authorization": f"Bearer {token}"}
+        response = await self.client.patch(
+            url=url,
+            headers=headers,
+            json=cmd.model_dump(exclude_unset=True, mode="json"),
+            timeout=5,
+        )
+        response.raise_for_status()
+        habit = schemas.HabitRead.model_validate(response.json())
+        return habit
+
+    @catch_exceptions
+    async def delete_habit(
+        self, token: str, cmd: schemas.HabitDeleteCommand
+    ) -> Optional[HabitRead]:
+        url = f"{self.base_url}habits/{cmd.id}"
+        headers = {"Authorization": f"Bearer {token}"}
+        response = await self.client.delete(
+            url=url,
+            headers=headers,
+            timeout=5,
+        )
+        response.raise_for_status()
+        habit = HabitRead.model_validate(response.json())
+        if not habit:
+            return None
+        return habit
+
+    @catch_exceptions
+    async def delete_completed_habits(self, token: str) -> None:
+        url = f"{self.base_url}habits/completed"
+        headers = {"Authorization": f"Bearer {token}"}
+        response = await self.client.delete(
+            url=url,
+            headers=headers,
+            timeout=5,
+        )
+        response.raise_for_status()
+        result = response.json()
+        deleted_habits_ids = result.get("habits_ids")
+        logger.debug(f"Удалено завершенных привычек: {len(deleted_habits_ids)}")

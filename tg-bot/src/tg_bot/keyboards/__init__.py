@@ -1,0 +1,31 @@
+from tg_bot.keyboards.kb_factory import (
+    kb_back,
+    kb_cancel,
+    kb_back_cancel,
+    kb_confirm_habit_completed,
+    kb_habit_add_or_cancel,
+    kb_active_habits,
+    kb_completed_habits,
+    kb_login,
+    kb_login_or_register,
+    kb_profile,
+    kb_register,
+    kb_habit_edit_delete_complete,
+    kb_habit_edit_choices,
+)
+
+__all__ = (
+    "kb_back",
+    "kb_cancel",
+    "kb_back_cancel",
+    "kb_confirm_habit_completed",
+    "kb_habit_add_or_cancel",
+    "kb_active_habits",
+    "kb_completed_habits",
+    "kb_login",
+    "kb_login_or_register",
+    "kb_profile",
+    "kb_register",
+    "kb_habit_edit_delete_complete",
+    "kb_habit_edit_choices",
+)
