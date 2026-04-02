@@ -630,5 +630,6 @@ class HabitDeleteScene(app_scenes.CancellableScene, state="menu_habit_delete"):
             await callback_query.message.edit_text(
                 text=f"Привычка '{habit.title}' удалена ❎"
             )
-            # TODO: реализовать удаление задачи из scheduler
+            await scheduler_service.delete_job(job_id=habit.id)
+
         await self.wizard.goto(app_scenes.MainMenuScene)
