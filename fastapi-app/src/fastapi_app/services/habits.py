@@ -1,5 +1,6 @@
 """Модуль обслуживания привычек."""
 
+from pydantic import PositiveInt
 from sqlalchemy.exc import DatabaseError
 
 from fastapi_app.configs.loguru_config import logger
@@ -16,7 +17,9 @@ from fastapi_app.schemas.habits import (
     HabitDeleteCommand,
     HabitRead,
     HabitUpdateCommand,
+    DeletedHabitsIds,
 )
+from fastapi_app.schemas.users import UserByTelegramIdQuery
 
 
 class HabitService:
@@ -53,21 +56,30 @@ class HabitService:
             raise HabitNotFoundException
         return habit
 
-    async def update_habit(self, cmd: HabitUpdateCommand) -> HabitRead:
+    async def update_habit(
+        self, habit_id: PositiveInt, cmd: HabitUpdateCommand
+    ) -> HabitRead:
         """Обновляет данные привычки."""
         try:
-            habit = await self.repository.update(cmd)
+            habit = await self.repository.update(habit_id=habit_id, cmd=cmd)
         except EmptyResult:
             raise HabitNotFoundException
         return habit
 
-    async def delete_habit(self, cmd: HabitDeleteCommand) -> HabitRead:
+    async def delete_habit(self, habit_id: int) -> HabitRead:
         """Удаляет привычку."""
         try:
-            habit = await self.repository.delete(cmd)
+            habit = await self.repository.delete(habit_id)
         except EmptyResult:
             raise HabitNotFoundException
         return habit
+
+    async def delete_completed_habits_by_user_telegram_id(
+        self, query: UserByTelegramIdQuery
+    ) -> DeletedHabitsIds:
+        return await self.repository.delete_completed_habits_by_telegram_id(
+            query=query
+        )
 
     async def mark_habit_as_completed(self, query: HabitByIdQuery) -> None:
         """Отмечает привычку как выполненная если выполнено условие того,
@@ -75,8 +87,8 @@ class HabitService:
         """
         habit = await self.repository.read(query)
         if len(habit.tracking) >= habit.remind_quantity:
-            cmd = HabitUpdateCommand(id=habit.id, completed=True)
-            habit = await self.repository.update(cmd=cmd)
+            cmd = HabitUpdateCommand(completed=True)
+            habit = await self.repository.update(habit_id=habit.id, cmd=cmd)
 
         if habit.completed:
             logger.debug("Привитие привычки '{}' завершено.", habit.title)

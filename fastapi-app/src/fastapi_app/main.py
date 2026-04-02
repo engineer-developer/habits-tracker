@@ -31,6 +31,10 @@ def create_app() -> FastAPI:
         app.add_exception_handler(Exception, handle_other_exception)
         yield
 
-    app = FastAPI(lifespan=lifespan)
+    app = FastAPI(
+        title="Habit tracker",
+        description="Backend app for habit tracking",
+        lifespan=lifespan,
+    )
 
     return app

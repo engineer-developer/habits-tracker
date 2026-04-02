@@ -3,11 +3,14 @@
 from typing import Annotated
 
 from dependency_injector.wiring import inject
-from fastapi import Path, Query, status
+from fastapi import Path, Query, status, Depends
 from fastapi.routing import APIRouter
+from pydantic import PositiveInt
+from fastapi.responses import JSONResponse
 
 from fastapi_app.dependencies.auth import (
     DepsCurrentUserTelegramId,
+    get_current_user_telegram_id,
 )
 from fastapi_app.dependencies.habit import DepsHabitService
 from fastapi_app.dependencies.users import DepsUserService
@@ -18,6 +21,7 @@ from fastapi_app.schemas.habits import (
     HabitDeleteCommand,
     HabitRead,
     HabitUpdateCommand,
+    DeletedHabitsIds,
 )
 from fastapi_app.schemas.users import UserByTelegramIdQuery
 
@@ -91,29 +95,47 @@ async def get_habit_by_id(
 
 
 @router.patch(
-    "",
+    "/{id}",
     response_model=HabitRead,
 )
 @inject
 async def update_habit(
     cmd: HabitUpdateCommand,
     habit_service: DepsHabitService,
+    id: int = Path(..., ge=1, description="ID привычки", examples=[1]),
 ) -> HabitRead:
     """Роут для изменения привычки."""
-    habit = await habit_service.update_habit(cmd)
+    habit = await habit_service.update_habit(habit_id=id, cmd=cmd)
     return habit
 
 
 @router.delete(
-    "",
+    "/{id:int}",
     status_code=status.HTTP_200_OK,
     response_model=HabitRead,
+    dependencies=[Depends(get_current_user_telegram_id)],
 )
 @inject
 async def delete_habit(
-    cmd: HabitDeleteCommand,
+    id: Annotated[int, Path(ge=1, description="ID привычки")],
     habit_service: DepsHabitService,
 ) -> HabitRead:
     """Роут для удаления привычки."""
-    habit = await habit_service.delete_habit(cmd)
+    habit = await habit_service.delete_habit(habit_id=id)
     return habit
+
+
+@router.delete(
+    "/completed",
+    status_code=status.HTTP_200_OK,
+    response_model=DeletedHabitsIds,
+)
+@inject
+async def delete_completed_habits(
+    telegram_id: DepsCurrentUserTelegramId,
+    habit_service: DepsHabitService,
+) -> DeletedHabitsIds:
+    """Роут для удаления завершенных привычек."""
+    return await habit_service.delete_completed_habits_by_user_telegram_id(
+        query=UserByTelegramIdQuery(telegram_id=telegram_id)
+    )

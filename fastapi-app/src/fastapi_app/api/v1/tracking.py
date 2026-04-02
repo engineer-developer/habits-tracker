@@ -20,5 +20,5 @@ async def add_habit_tracking(
     tracking_service: DepsTrackingService,
 ) -> TrackingRead:
     """Роут для добавления отслеживания привычки."""
-    tracking = await tracking_service.add_tracking(cmd)
+    tracking = await tracking_service.add_tracking(cmd=cmd)
     return tracking

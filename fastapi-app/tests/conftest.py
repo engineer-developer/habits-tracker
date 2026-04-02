@@ -1,13 +1,13 @@
 from typing import AsyncGenerator, AsyncIterator, Any, Generator
 
 import pytest
-from configs import get_settings
-from dependencies.database import get_async_session
+from fastapi_app.configs.config import get_settings
+from fastapi_app.database.database import Database
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from main import create_app
-from models.users import User
-from models.base import Base
+from fastapi_app.main import create_app
+from fastapi_app.models.users import User
+from fastapi_app.models.base import BaseOrmModel
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -15,10 +15,10 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
-from tests.source_data.users import users_list
+from source_data.users import users_list
 
 settings = get_settings()
-prod_db_url = settings.db_url.unicode_string()
+prod_db_url = settings.db.dsn.render_as_string()
 test_db_url = prod_db_url.rsplit(sep="/", maxsplit=1)[0] + "/test_db"
 
 
@@ -30,13 +30,13 @@ test_engine = create_async_engine(
 Async_session = async_sessionmaker(
     test_engine, class_=AsyncSession, expire_on_commit=False
 )
-Base.metadata.bind = test_engine
+BaseOrmModel.metadata.bind = test_engine
 
 
-async def override_get_async_session() -> AsyncIterator[AsyncSession]:
-    """Получаем асинхронную сессию."""
-    async with Async_session() as session:
-        yield session
+# async def override_get_async_session() -> AsyncIterator[AsyncSession]:
+#     """Получаем асинхронную сессию."""
+#     async with Async_session() as session:
+#         yield session
 
 
 @pytest.fixture(scope="session")
@@ -50,8 +50,8 @@ async def users(request) -> list[User]:
 async def prepare_database(users) -> AsyncGenerator[None, Any]:
     """Подготовка БД."""
     async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(BaseOrmModel.metadata.drop_all)
+        await conn.run_sync(BaseOrmModel.metadata.create_all)
 
     async with Async_session() as session:
         session.add_all(users)
@@ -60,7 +60,7 @@ async def prepare_database(users) -> AsyncGenerator[None, Any]:
     yield
 
     async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(BaseOrmModel.metadata.drop_all)
 
 
 @pytest.fixture(scope="session")
@@ -69,7 +69,7 @@ def app() -> Generator[FastAPI, Any, None]:
     _app: FastAPI = create_app()
 
     # Переопределение зависимостей
-    _app.dependency_overrides[get_async_session] = override_get_async_session
+    # _app.dependency_overrides[get_async_session] = override_get_async_session
     yield _app
 
 

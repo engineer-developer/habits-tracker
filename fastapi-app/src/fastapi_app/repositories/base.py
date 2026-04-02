@@ -24,13 +24,13 @@ class Repository(ABC):
         raise NotImplementedError
 
     async def read_all(self) -> list[Model]:
-        """Read all OrmModels."""
+        """Read all Models."""
         raise NotImplementedError
 
-    async def update(self, cmd: Model) -> Model:
+    async def update(self, id: int, cmd: Model) -> Model:
         """Update Model."""
         raise NotImplementedError
 
-    async def delete(self, cmd: Model) -> Model:
+    async def delete(self, id: int) -> Model:
         """Delete Model."""
         raise NotImplementedError

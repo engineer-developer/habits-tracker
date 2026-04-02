@@ -64,6 +64,7 @@ class AuthService:
         """Метод регистрации пользователя."""
         hashed_password = await self.get_password_hash(cmd.password)
         cmd.password = hashed_password
+
         await self.user_service.add_user(cmd)
 
         payload = {"sub": str(cmd.telegram_id)}
